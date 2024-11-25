@@ -21,13 +21,7 @@ const app = new Hono()
     );
 
     if (members.total === 0) {
-      const response = {
-        data: {
-          documents: [],
-          total: 0
-        }
-      };
-
+      const response = { data: { documents: [], total: 0 } };
       return c.json(response);
     }
 
@@ -38,7 +32,7 @@ const app = new Hono()
       WORKSPACES_ID,
       [
         Query.orderDesc("$createdAt"),
-        Query.contains("$$id", workspaceIds),
+        Query.contains("$id", workspaceIds),
       ],
     );
 
