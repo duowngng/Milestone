@@ -3,7 +3,7 @@
 import { RiAddCircleFill } from "react-icons/ri";
 
 import { useRouter } from "next/navigation";
-import { useGetWorkspaces } from "@/features/workspaces/api/use-get-workspace";
+import { useGetWorkspaces } from "@/features/workspaces/api/use-get-workspaces";
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 import { useCreateWorkspaceModal } from "@/features/workspaces/hooks/use-create-workspace-modal";
 
