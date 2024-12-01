@@ -33,7 +33,7 @@ export const DatePicker = ({ value, onChange, className, placeholder = "Select d
             className
           )}
         >
-          <CalendarIcon className="mr-2 w-4 h-4" />
+          <CalendarIcon className="w-4 h-4" />
           {value ? format(value, "PPP") : <span>{placeholder}</span>}
         </Button>
       </PopoverTrigger>
