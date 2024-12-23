@@ -6,11 +6,11 @@ import { useCreateTaskModal } from "../hooks/use-create-task-modal";
 import { CreateTaskFormWrapper } from "./create-task-form-wrapper";
 
 export const CreateTaskModal = () => {
-  const { isOpen, setIsOpen, close } = useCreateTaskModal();
+  const { isOpen, close, initialStatus } = useCreateTaskModal();
 
   return (
-    <ResponsiveModal open={isOpen} onOpenChange={setIsOpen} >
-      <CreateTaskFormWrapper onCancel={close} />
+    <ResponsiveModal open={isOpen} onOpenChange={(open) => !open && close()}>
+      <CreateTaskFormWrapper onCancel={close} initialStatus={initialStatus ?? undefined} />
     </ResponsiveModal>
   )
 }
