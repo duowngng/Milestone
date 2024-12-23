@@ -69,8 +69,6 @@ export const CreateTaskForm = ({
     });
   };
 
-  console.log("initialStatus", initialStatus);
-
   return (
     <Card className="w-full h-full border-none shadow-none">
       <CardHeader className="flex p-7">

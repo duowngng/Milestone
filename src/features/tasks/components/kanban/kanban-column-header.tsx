@@ -10,8 +10,8 @@ import {
 import { snakeCaseToTitleCase } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
-import { TaskStatus } from "../types";
-import { useCreateTaskModal } from "../hooks/use-create-task-modal";
+import { TaskStatus } from "../../types";
+import { useCreateTaskModal } from "../../hooks/use-create-task-modal";
 
 interface KanbanColumnHeaderProps {
   board: TaskStatus;
