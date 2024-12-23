@@ -9,15 +9,16 @@ import { DottedSeparator } from "@/components/dotted-separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { DataFilter } from "./data-filter";
-import { DataTable } from "./table/data-table";
 import { columns } from "./table/columns";
+import { DataTable } from "./table/data-table";
+import { DataKanban } from "./kanban/data-kanban";
+import { DataCalendar } from "./calendar/data.calendar";
 
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 import { useCreateTaskModal } from "../hooks/use-create-task-modal";
 import { useGetTasks } from "../api/use-get-tasks";
 import { useBulkUpdateTask } from "../api/use-bulk-update-task";
 import { useTaskFilters } from "../hooks/use-task-filters";
-import { DataKanban } from "./kanban/data-kanban";
 import { TaskStatus } from "../types";
 
 export const TaskViewSwitcher = () => {
@@ -109,8 +110,8 @@ export const TaskViewSwitcher = () => {
             <TabsContent value="kanban" className="mt-0">
               <DataKanban data={tasks?.documents ?? []} onChange={onKanbanChange}/>
             </TabsContent>
-            <TabsContent value="calendar" className="mt-0">
-              {JSON.stringify(tasks)}
+            <TabsContent value="calendar" className="mt-0 h-full pb-4">
+              <DataCalendar data={tasks?.documents ?? []} />
             </TabsContent>
           </>
         )}
