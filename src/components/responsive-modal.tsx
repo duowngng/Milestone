@@ -2,7 +2,9 @@ import { useMedia } from 'react-use';
 
 import {
   Dialog,
-  DialogContent
+  DialogContent,
+  DialogTitle,
+  DialogDescription
 } from '@/components/ui/dialog';
 
 import {
@@ -27,6 +29,8 @@ export const ResponsiveModal = ({
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="w-full sm:max-w-lg p-0 border-none overflow-y-auto hide-scrollbar max-h-[85vh]">
+          <DialogTitle className="hidden" />
+          <DialogDescription className="hidden" />
           {children}
         </DialogContent>
       </Dialog>

@@ -8,10 +8,10 @@ import { Button } from "@/components/ui/button";
 import { ProjectAvatar } from "@/features/projects/components/project-avatar";
 import { MemberAvatar } from "@/features/members/components/member-avatar";
 
-import { Task } from "../types";
-import { TaskDate } from "./task-date";
+import { Task } from "../../types";
+import { TaskDate } from "../task-date";
 import { snakeCaseToTitleCase } from "@/lib/utils";
-import { TaskActions } from "./task-actions";
+import { TaskActions } from "../task-actions";
 
 export const columns: ColumnDef<Task>[] = [
   {

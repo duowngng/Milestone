@@ -35,17 +35,18 @@ import { createTaskSchema } from "../schemas";
 import { useCreateTask } from "../api/use-create-task";
 import { TaskStatus } from "../types";
 
-
 interface CreateTaskFormProps {
   onCancel?: () => void;
   projectOptions: { id: string; name: string, imageUrl: string }[];
   memberOptions: { id: string; name: string }[];
+  initialStatus?: TaskStatus;
 };
 
 export const CreateTaskForm = ({
   onCancel,
   projectOptions,
-  memberOptions
+  memberOptions,
+  initialStatus,
 }: CreateTaskFormProps) => {
   const workspaceId = useWorkspaceId();
   const router = useRouter();
@@ -55,6 +56,7 @@ export const CreateTaskForm = ({
     resolver: zodResolver(createTaskSchema.omit({ workspaceId: true })),
     defaultValues: {
       workspaceId,
+      status: initialStatus,
     },
   });
 
