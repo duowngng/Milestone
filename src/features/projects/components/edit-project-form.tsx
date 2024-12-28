@@ -46,7 +46,7 @@ export const EditProjectForm = ({ onCancel, initialValues }: EditProjectFormProp
 
   const [DeleteDialog, confirmDelete] = useConfirm(
     "Delete Project",
-    "Are you sure? This action is irreversible.",
+    "Are you sure you want to delete this project?",
     "destructive"
   );
 
@@ -85,10 +85,6 @@ export const EditProjectForm = ({ onCancel, initialValues }: EditProjectFormProp
     mutate({
       form: finalValues,
       param: { projectId: initialValues.$id }
-    }, {
-      onSuccess: () => {
-        form.reset();
-      }
     });
   };
 
