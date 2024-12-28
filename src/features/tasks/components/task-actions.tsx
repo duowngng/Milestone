@@ -82,7 +82,7 @@ export const TaskActions = ({ id, projectId, children }: TaskActionsProps) => {
           <DropdownMenuItem
             onClick={onDelete}
             disabled={isPending}
-            className="text-amber-700 focus:text-amber-700 font-medium p-[10px]"
+            className="text-red-700 focus:text-red-700 font-medium p-[10px]"
           >
             <TrashIcon className="size-4 mr-2 stroke-2" />
             Delete Task

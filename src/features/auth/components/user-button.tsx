@@ -64,7 +64,7 @@ export const UserButton = () => {
         <DottedSeparator className="mb-1"/>
         <DropdownMenuItem
           onClick={() => mutate()}
-          className="h-10 flex items-center justify-center text-amber-700 font-medium cursor-pointer"
+          className="h-10 flex items-center justify-center text-red-700 font-medium cursor-pointer"
         >
           <LogOut className="size-4 mr-2" />
           Logout

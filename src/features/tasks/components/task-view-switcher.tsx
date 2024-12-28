@@ -20,7 +20,11 @@ import { useTaskFilters } from "../hooks/use-task-filters";
 import { DataKanban } from "./kanban/data-kanban";
 import { TaskStatus } from "../types";
 
-export const TaskViewSwitcher = () => {
+interface TaskViewSwitcherProps {
+  hideProjectFilter?: boolean;
+}
+
+export const TaskViewSwitcher = ({ hideProjectFilter }: TaskViewSwitcherProps) => {
   const [{
     projectId,
     status,
@@ -95,7 +99,7 @@ export const TaskViewSwitcher = () => {
           </Button>
         </div>
         <DottedSeparator className="my-4" />
-          <DataFilter />
+          <DataFilter hideProjectFilter={hideProjectFilter} />
         <DottedSeparator className="my-4" />
         {isLoadingTasks ? (
           <div className="w-full border rounded-lg h-[200px] flex flex-col items-center justify-center">
