@@ -57,7 +57,7 @@ export const EditWorkspaceForm = ({ onCancel, initialValues }: EditWorkspaceForm
   );
   const [DeleteDialog, confirmDelete] = useConfirm(
     "Delete Workspace",
-    "Are you sure? This action is irreversible.",
+    "Are you sure you want to delete this workspace?",
     "destructive"
   );
 
