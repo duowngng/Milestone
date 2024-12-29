@@ -8,7 +8,7 @@ import { createAdminClient } from "@/lib/appwrite";
 import { DATABASE_ID, MEMBERS_ID } from "@/config";
 
 import { getMember } from "../utils";
-import { MemberRole } from "../type";
+import { Member, MemberRole } from "../type";
 
 const app = new Hono()
   .get(
@@ -31,7 +31,7 @@ const app = new Hono()
         return c.json({ error: "Unauthorized" }, 401);
       }
 
-      const members = await databases.listDocuments(
+      const members = await databases.listDocuments<Member>(
         DATABASE_ID,
         MEMBERS_ID,
         [Query.equal("workspaceId", workspaceId)]
