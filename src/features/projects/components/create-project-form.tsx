@@ -3,7 +3,7 @@
 import { z } from "zod";
 import Image from "next/image";
 import { ImageIcon } from "lucide-react";
-import { use, useRef } from "react";
+import { useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
