@@ -4,10 +4,12 @@ import { client } from "@/lib/rpc";
 
 interface useGetProjectsProps {
   workspaceId: string;
+  enabled?: boolean;
 }
 
 export const useGetProjects = ({
   workspaceId,
+  enabled = true
 }: useGetProjectsProps) => {
   const query = useQuery({
     queryKey: ["projects", workspaceId],
@@ -21,10 +23,10 @@ export const useGetProjects = ({
       }
 
       const { data } = await response.json();
-
       return data;
     },
-});
+    enabled: enabled && Boolean(workspaceId)
+  });
 
   return query;
 }
