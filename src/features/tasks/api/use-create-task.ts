@@ -28,7 +28,7 @@ export const useCreateTask = () => {
       toast.success("Task created");
       queryClient.invalidateQueries({ queryKey: ["tasks"]});
     },
-    onError: (error) => {
+    onError: () => {
       toast.error("Failed to create task");
     },
   });

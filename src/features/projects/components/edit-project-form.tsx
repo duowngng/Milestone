@@ -7,7 +7,6 @@ import { useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
 import { DottedSeparator } from "@/components/dotted-separator";
@@ -245,7 +244,7 @@ export const EditProjectForm = ({ onCancel, initialValues }: EditProjectFormProp
               size="sm"
               variant="destructive"
               className="w-fit ml-auto"
-              disabled={isPending}
+              disabled={isPending || isDeletingProject}
               onClick={handleDelete}
             >
               Delete Project

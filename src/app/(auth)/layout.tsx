@@ -12,7 +12,6 @@ interface AuthLayoutProps {
 
 const AuthLayout = ({ children }: AuthLayoutProps) => {
   const isSignIn = usePathname() === "/sign-in";
-  const pathname = usePathname();
 
   return (
     <main className="bg-neutral-100 min-h-screen">
