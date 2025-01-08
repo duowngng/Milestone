@@ -1,6 +1,11 @@
 import { useQueryState, parseAsBoolean, parseAsStringEnum } from "nuqs";
 import { TaskStatus } from "../types";
 
+interface OpenTaskModalOptions {
+  status?: TaskStatus;
+  projectId?: string;
+}
+
 export const useCreateTaskModal = () => {
   const [isOpen, setIsOpen] = useQueryState(
     "create-task",
@@ -10,10 +15,16 @@ export const useCreateTaskModal = () => {
     "status",
     parseAsStringEnum(Object.values(TaskStatus))
   );
+  const [initialProjectId, setInitialProjectId] = useQueryState("projectId");
 
-  const open = (status?: TaskStatus) => {
+  const open = (options: OpenTaskModalOptions = {}) => {
+    const { status, projectId } = options;
+
     if (status !== undefined) {
       setInitialStatus(status);
+    }
+    if (projectId) {
+      setInitialProjectId(projectId);
     }
     setIsOpen(true);
   };
@@ -21,6 +32,7 @@ export const useCreateTaskModal = () => {
   const close = () => {
     setIsOpen(false);
     setInitialStatus(null);
+    setInitialProjectId(null);
   };
 
   return {
@@ -29,5 +41,6 @@ export const useCreateTaskModal = () => {
     close,
     setIsOpen,
     initialStatus,
+    initialProjectId,
   };
 };

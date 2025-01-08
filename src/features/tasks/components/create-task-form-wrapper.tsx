@@ -9,11 +9,13 @@ import { TaskStatus } from "../types";
 interface CreateTaskFormWrapperProps {
   onCancel: () => void;
   initialStatus?: TaskStatus;
+  initialProjectId?: string;
 };
 
 export const CreateTaskFormWrapper = ({
   onCancel,
   initialStatus,
+  initialProjectId,
 }: CreateTaskFormWrapperProps) => {
   const workspaceId = useWorkspaceId();
 
@@ -50,6 +52,7 @@ export const CreateTaskFormWrapper = ({
         projectOptions={projectOptions ?? []}
         memberOptions={memberOptions ?? []}
         initialStatus={initialStatus}
+        initialProjectId={initialProjectId}
       />
     </div>
   )

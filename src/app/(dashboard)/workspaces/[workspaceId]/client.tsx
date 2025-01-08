@@ -27,6 +27,10 @@ import { MemberAvatar } from "@/features/members/components/member-avatar";
 export const WorkspaceIdClient = async () => {
   const workspaceId = useWorkspaceId();
 
+  if (!workspaceId) {
+    return <PageLoader />;
+  }
+
   const { data: analytics, isLoading: isLoadingAnalytics } = useGetWorkspaceAnalytics({ workspaceId });
   const { data: tasks, isLoading: isLoadingTasks } = useGetTasks({ workspaceId });
   const { data: projects, isLoading: isLoadingProjects } = useGetProjects({ workspaceId });
@@ -81,7 +85,7 @@ export const TaskList = ({ data, total }: TaskListProps) => {
         <DottedSeparator className="my-4" />
         <ul className="flex flex-col gap-y-4">
           {data.map((task) => (
-            <li key={task.id}>
+            <li key={task.$id}>
               <Link href={`/workspaces/${workspaceId}/tasks/${task.$id}`}>
                 <Card className="shadow-none rounded-lg hover:opacity-75 transition">
                   <CardContent className="p-4">
@@ -136,7 +140,7 @@ export const ProjectList = ({ data, total }: ProjectListProps) => {
         <DottedSeparator className="my-4" />
         <ul className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {data.map((project) => (
-            <li key={project.id}>
+            <li key={project.$id}>
               <Link href={`/workspaces/${workspaceId}/projects/${project.$id}`}>
                 <Card className="shadow-none rounded-lg hover:opacity-75 transition">
                   <CardContent className="p-4 flex items-center gap-x-2.5">
@@ -187,7 +191,7 @@ export const MemberList = ({ data, total }: MemberListProps) => {
         <DottedSeparator className="my-4" />
         <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {data.map((member) => (
-            <li key={member.id}>
+            <li key={member.$id}>
               <Card className="shadow-none rounded-lg overflow-hidden">
                 <CardContent className="p-3 flex flex-col items-center gap-x-2">
                   <MemberAvatar
