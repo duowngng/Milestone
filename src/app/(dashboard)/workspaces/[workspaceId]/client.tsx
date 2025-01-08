@@ -27,10 +27,6 @@ import { MemberAvatar } from "@/features/members/components/member-avatar";
 export const WorkspaceIdClient = async () => {
   const workspaceId = useWorkspaceId();
 
-  if (!workspaceId) {
-    return <PageLoader />;
-  }
-
   const { data: analytics, isLoading: isLoadingAnalytics } = useGetWorkspaceAnalytics({ workspaceId });
   const { data: tasks, isLoading: isLoadingTasks } = useGetTasks({ workspaceId });
   const { data: projects, isLoading: isLoadingProjects } = useGetProjects({ workspaceId });
