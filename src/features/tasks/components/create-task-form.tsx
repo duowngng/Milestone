@@ -39,6 +39,7 @@ interface CreateTaskFormProps {
   projectOptions: { id: string; name: string, imageUrl: string }[];
   memberOptions: { id: string; name: string }[];
   initialStatus?: TaskStatus;
+  initialProjectId?: string;
 };
 
 export const CreateTaskForm = ({
@@ -46,6 +47,7 @@ export const CreateTaskForm = ({
   projectOptions,
   memberOptions,
   initialStatus,
+  initialProjectId,
 }: CreateTaskFormProps) => {
   const workspaceId = useWorkspaceId();
   const { mutate, isPending } = useCreateTask();
@@ -55,6 +57,7 @@ export const CreateTaskForm = ({
     defaultValues: {
       workspaceId,
       status: initialStatus,
+      projectId: initialProjectId,
     },
   });
 

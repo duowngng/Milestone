@@ -9,6 +9,7 @@ import {
 
 import { snakeCaseToTitleCase } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useProjectId } from "@/features/projects/hooks/use-project-id";
 
 import { TaskStatus } from "../../types";
 import { useCreateTaskModal } from "../../hooks/use-create-task-modal";
@@ -40,6 +41,7 @@ export const KanbanColumnHeader = ({
   board,
   taskCount,
 }: KanbanColumnHeaderProps) => {
+  const paramProjectId = useProjectId();
   const { open } = useCreateTaskModal();
   const icon = statusIconMap[board];
 
@@ -55,7 +57,10 @@ export const KanbanColumnHeader = ({
         </div>
       </div>
       <Button
-        onClick={() => open(board)}
+        onClick={() => open({
+          status: board,
+          projectId: paramProjectId || undefined
+        })}
         variant="ghost"
         size="icon"
         className="size-5"

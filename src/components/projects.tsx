@@ -16,6 +16,7 @@ export const Projects = () => {
   const workspaceId = useWorkspaceId();
   const { data } = useGetProjects({
     workspaceId,
+    enabled: !!workspaceId
   });
 
   return (
