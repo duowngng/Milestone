@@ -1,3 +1,4 @@
+import { useEffect, useRef, useCallback } from "react";
 import { FolderIcon, ListCheckIcon, UserIcon } from "lucide-react";
 
 import { useGetMembers } from "@/features/members/api/use-get-members";
@@ -13,19 +14,29 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/date-picker";
+import { PageLoader } from "@/components/page-loader";
 
 import { TaskStatus } from "../types";
 import { useTaskFilters } from "../hooks/use-task-filters";
 
 interface DataFilterProps {
   hideProjectFilter?: boolean;
+  memberId?: string;
 }
 
-export const DataFilter = ({ hideProjectFilter }: DataFilterProps) => {
+export const DataFilter = ({
+  hideProjectFilter,
+  memberId,
+}: DataFilterProps) => {
   const workspaceId = useWorkspaceId();
+  const initialFilterApplied = useRef(false);
 
-  const { data: projects, isLoading: isLoadingProjects } = useGetProjects({workspaceId});
-  const { data: members, isLoading: isLoadingMembers } = useGetMembers({ workspaceId });
+  const { data: projects, isLoading: isLoadingProjects } = useGetProjects({
+    workspaceId,
+  });
+  const { data: members, isLoading: isLoadingMembers } = useGetMembers({
+    workspaceId,
+  });
 
   const isLoading = isLoadingProjects || isLoadingMembers;
 
@@ -39,27 +50,39 @@ export const DataFilter = ({ hideProjectFilter }: DataFilterProps) => {
     label: member.name,
   }));
 
-  const [{
-    projectId,
-    status,
-    assigneeId,
-    dueDate,
-  }, setFilters] = useTaskFilters();
+  const [{ projectId, status, assigneeId, dueDate }, setFilters] =
+    useTaskFilters();
 
-  const onStatusChange = (value: string) => {
-    setFilters({ status: value === "all" ? null : value as TaskStatus });
-  }
+  const onStatusChange = useCallback(
+    (value: string) => {
+      setFilters({ status: value === "all" ? null : (value as TaskStatus) });
+    },
+    [setFilters]
+  );
 
-  const onAssigneeChange = (value: string) => {
-    setFilters({ assigneeId: value === "all" ? null : value as string });
-  }
+  const onAssigneeChange = useCallback(
+    (value: string) => {
+      setFilters({ assigneeId: value === "all" ? null : (value as string) });
+    },
+    [setFilters]
+  );
 
-  const onProjectChange = (value: string) => {
-    setFilters({ projectId: value === "all" ? null : value as string });
-  }
+  const onProjectChange = useCallback(
+    (value: string) => {
+      setFilters({ projectId: value === "all" ? null : (value as string) });
+    },
+    [setFilters]
+  );
+
+  useEffect(() => {
+    if (memberId && !initialFilterApplied.current && !assigneeId) {
+      onAssigneeChange(memberId);
+      initialFilterApplied.current = true;
+    }
+  }, [memberId, assigneeId, onAssigneeChange]);
 
   if (isLoading) {
-    return null;
+    return <PageLoader />;
   }
 
   return (
@@ -85,7 +108,7 @@ export const DataFilter = ({ hideProjectFilter }: DataFilterProps) => {
         </SelectContent>
       </Select>
       <Select
-        defaultValue={assigneeId ?? undefined}
+        value={assigneeId ?? undefined}
         onValueChange={(value) => onAssigneeChange(value)}
       >
         <SelectTrigger className="w-full lg:w-auto h-8">
@@ -130,10 +153,10 @@ export const DataFilter = ({ hideProjectFilter }: DataFilterProps) => {
         placeholder="Due date"
         className="w-full lg:w-auto h-8 text-accent-foreground"
         value={dueDate ? new Date(dueDate) : undefined}
-        onChange={(date) =>{
-          setFilters({ dueDate: date ? date.toISOString() : null })
+        onChange={(date) => {
+          setFilters({ dueDate: date ? date.toISOString() : null });
         }}
       />
     </div>
-  )
-}
+  );
+};
