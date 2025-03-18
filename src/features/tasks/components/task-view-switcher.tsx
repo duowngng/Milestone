@@ -25,16 +25,14 @@ import { TaskStatus } from "../types";
 
 interface TaskViewSwitcherProps {
   hideProjectFilter?: boolean;
+  memberId?: string;
 }
 
-export const TaskViewSwitcher = ({ hideProjectFilter }: TaskViewSwitcherProps) => {
-  const [{
-    projectId,
-    status,
-    assigneeId,
-    search,
-    dueDate,
-  }] = useTaskFilters();
+export const TaskViewSwitcher = ({
+  hideProjectFilter,
+  memberId,
+}: TaskViewSwitcherProps) => {
+  const [{ projectId, status, assigneeId, search, dueDate }] = useTaskFilters();
   const [view, setView] = useQueryState("task-view", {
     defaultValue: "table",
   });
@@ -45,10 +43,7 @@ export const TaskViewSwitcher = ({ hideProjectFilter }: TaskViewSwitcherProps) =
 
   const { mutate: bulkUpdate } = useBulkUpdateTask();
 
-  const {
-    data: tasks,
-    isLoading: isLoadingTasks
-  } = useGetTasks({
+  const { data: tasks, isLoading: isLoadingTasks } = useGetTasks({
     workspaceId,
     projectId: paramProjectId || projectId,
     status,
@@ -57,13 +52,14 @@ export const TaskViewSwitcher = ({ hideProjectFilter }: TaskViewSwitcherProps) =
     dueDate,
   });
 
-  const onKanbanChange = useCallback ((
-    tasks: { $id: string, status: TaskStatus, position: number }[]
-  ) => {
-    bulkUpdate({
-      json: { tasks },
-    });
-  }, [bulkUpdate]);
+  const onKanbanChange = useCallback(
+    (tasks: { $id: string; status: TaskStatus; position: number }[]) => {
+      bulkUpdate({
+        json: { tasks },
+      });
+    },
+    [bulkUpdate]
+  );
 
   return (
     <Tabs
@@ -74,22 +70,13 @@ export const TaskViewSwitcher = ({ hideProjectFilter }: TaskViewSwitcherProps) =
       <div className="h-full flex flex-col overflow-auto p-4">
         <div className="flex flex-col gap-y-2 lg:flex-row justify-between items-center">
           <TabsList className="w-full lg:w-auto">
-            <TabsTrigger
-              className="h-8 w-full lg:w-auto"
-              value="table"
-            >
+            <TabsTrigger className="h-8 w-full lg:w-auto" value="table">
               Table
             </TabsTrigger>
-            <TabsTrigger
-              className="h-8 w-full lg:w-auto"
-              value="kanban"
-            >
+            <TabsTrigger className="h-8 w-full lg:w-auto" value="kanban">
               Kanban
             </TabsTrigger>
-            <TabsTrigger
-              className="h-8 w-full lg:w-auto"
-              value="calendar"
-            >
+            <TabsTrigger className="h-8 w-full lg:w-auto" value="calendar">
               Calendar
             </TabsTrigger>
           </TabsList>
@@ -103,7 +90,7 @@ export const TaskViewSwitcher = ({ hideProjectFilter }: TaskViewSwitcherProps) =
           </Button>
         </div>
         <DottedSeparator className="my-4" />
-          <DataFilter hideProjectFilter={hideProjectFilter} />
+        <DataFilter hideProjectFilter={hideProjectFilter} memberId={memberId} />
         <DottedSeparator className="my-4" />
         {isLoadingTasks ? (
           <div className="w-full border rounded-lg h-[200px] flex flex-col items-center justify-center">
@@ -115,7 +102,10 @@ export const TaskViewSwitcher = ({ hideProjectFilter }: TaskViewSwitcherProps) =
               <DataTable columns={columns} data={tasks?.documents ?? []} />
             </TabsContent>
             <TabsContent value="kanban" className="mt-0">
-              <DataKanban data={tasks?.documents ?? []} onChange={onKanbanChange}/>
+              <DataKanban
+                data={tasks?.documents ?? []}
+                onChange={onKanbanChange}
+              />
             </TabsContent>
             <TabsContent value="calendar" className="mt-0 h-full pb-4">
               <DataCalendar data={tasks?.documents ?? []} />
