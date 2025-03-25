@@ -4,17 +4,18 @@ import { InferRequestType, InferResponseType } from "hono";
 
 import { client } from "@/lib/rpc";
 
-type Responsetype = InferResponseType<typeof client.api.tasks[":taskId"]["$delete"], 200>;
-type RequestType = InferRequestType<typeof client.api.tasks[":taskId"]["$delete"]>;
+type ResponseType = InferResponseType<
+  (typeof client.api.tasks)[":taskId"]["$delete"],
+  200
+>;
+type RequestType = InferRequestType<
+  (typeof client.api.tasks)[":taskId"]["$delete"]
+>;
 
 export const useDeleteTask = () => {
   const queryClient = useQueryClient();
 
-  const mutation = useMutation<
-  Responsetype,
-  Error,
-  RequestType
-  >({
+  const mutation = useMutation<ResponseType, Error, RequestType>({
     mutationFn: async ({ param }) => {
       const response = await client.api.tasks[":taskId"]["$delete"]({ param });
 
@@ -26,10 +27,10 @@ export const useDeleteTask = () => {
     },
     onSuccess: ({ data }) => {
       toast.success("Task deleted");
-      queryClient.invalidateQueries({ queryKey: ["project-analytics"]});
+      queryClient.invalidateQueries({ queryKey: ["project-analytics"] });
       queryClient.invalidateQueries({ queryKey: ["workspace-analytics"] });
-      queryClient.invalidateQueries({ queryKey: ["tasks"]});
-      queryClient.invalidateQueries({ queryKey: ["task", data.$id]});
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["task", data.$id] });
     },
     onError: (error) => {
       console.error(error);
@@ -38,4 +39,4 @@ export const useDeleteTask = () => {
   });
 
   return mutation;
-}
+};

@@ -6,13 +6,16 @@ import members from "@/features/members/server/route";
 import workspaces from "@/features/workspaces/server/route";
 import projects from "@/features/projects/server/route";
 import tasks from "@/features/tasks/server/route";
+import adminUsers from "@/features/users/server/admin/route";
 
-const app = new Hono().basePath("/api")
-                .route("/auth", auth)
-                .route("/workspaces", workspaces)
-                .route("/members", members)
-                .route("/projects", projects)
-                .route("/tasks", tasks);
+const app = new Hono()
+  .basePath("/api")
+  .route("/auth", auth)
+  .route("/workspaces", workspaces)
+  .route("/members", members)
+  .route("/projects", projects)
+  .route("/tasks", tasks)
+  .route("/admin/users", adminUsers);
 
 export const GET = handle(app);
 export const POST = handle(app);

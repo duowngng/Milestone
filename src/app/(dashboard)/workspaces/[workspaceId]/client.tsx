@@ -24,13 +24,20 @@ import { DottedSeparator } from "@/components/dotted-separator";
 import { ProjectAvatar } from "@/features/projects/components/project-avatar";
 import { MemberAvatar } from "@/features/members/components/member-avatar";
 
-export const WorkspaceIdClient = async () => {
+export const WorkspaceIdClient = () => {
   const workspaceId = useWorkspaceId();
 
-  const { data: analytics, isLoading: isLoadingAnalytics } = useGetWorkspaceAnalytics({ workspaceId });
-  const { data: tasks, isLoading: isLoadingTasks } = useGetTasks({ workspaceId });
-  const { data: projects, isLoading: isLoadingProjects } = useGetProjects({ workspaceId });
-  const { data: members, isLoading: isLoadingMembers } = useGetMembers({ workspaceId });
+  const { data: analytics, isLoading: isLoadingAnalytics } =
+    useGetWorkspaceAnalytics({ workspaceId });
+  const { data: tasks, isLoading: isLoadingTasks } = useGetTasks({
+    workspaceId,
+  });
+  const { data: projects, isLoading: isLoadingProjects } = useGetProjects({
+    workspaceId,
+  });
+  const { data: members, isLoading: isLoadingMembers } = useGetMembers({
+    workspaceId,
+  });
 
   const isLoading =
     isLoadingAnalytics ||
@@ -71,9 +78,7 @@ export const TaskList = ({ data, total }: TaskListProps) => {
     <div className="flex flex-col gap-y-4 col-span-1">
       <div className="bg-muted rounded-lg p-4">
         <div className="flex items-center justify-between">
-          <p className="text-lg font-semibold">
-            Tasks ({total})
-          </p>
+          <p className="text-lg font-semibold">Tasks ({total})</p>
           <Button onClick={() => createTask()} variant="muted" size="icon">
             <PlusIcon className="size-4 text-neutral-400" />
           </Button>
@@ -126,10 +131,12 @@ export const ProjectList = ({ data, total }: ProjectListProps) => {
     <div className="flex flex-col gap-y-4 col-span-1">
       <div className="bg-white border rounded-lg p-4">
         <div className="flex items-center justify-between">
-          <p className="text-lg font-semibold">
-            Projects ({total})
-          </p>
-          <Button onClick={() => createProject()} variant="secondary" size="icon">
+          <p className="text-lg font-semibold">Projects ({total})</p>
+          <Button
+            onClick={() => createProject()}
+            variant="secondary"
+            size="icon"
+          >
             <PlusIcon className="size-4 text-neutral-400" />
           </Button>
         </div>
@@ -175,9 +182,7 @@ export const MemberList = ({ data, total }: MemberListProps) => {
     <div className="flex flex-col gap-y-4 col-span-1">
       <div className="bg-white border rounded-lg p-4">
         <div className="flex items-center justify-between">
-          <p className="text-lg font-semibold">
-            Members ({total})
-          </p>
+          <p className="text-lg font-semibold">Members ({total})</p>
           <Button variant="secondary" size="icon" asChild>
             <Link href={`/workspaces/${workspaceId}/members`}>
               <SettingsIcon className="size-4 text-neutral-400" />
@@ -190,10 +195,7 @@ export const MemberList = ({ data, total }: MemberListProps) => {
             <li key={member.$id}>
               <Card className="shadow-none rounded-lg overflow-hidden">
                 <CardContent className="p-3 flex flex-col items-center gap-x-2">
-                  <MemberAvatar
-                    name={member.name}
-                    className="size-12"
-                  />
+                  <MemberAvatar name={member.name} className="size-12" />
                   <div className="flex flex-col items-center overflow-hidden">
                     <p className="text-lg font-medium line-clamp-1">
                       {member.name}
