@@ -12,7 +12,7 @@ type RequestType = InferRequestType<
   (typeof client.api.admin.workspaces)[":workspaceId"]["$patch"]
 >;
 
-export const useUpdateAdminWorkspace = () => {
+export const useUpdateWorkspace = () => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation<ResponseType, Error, RequestType>({
@@ -30,9 +30,12 @@ export const useUpdateAdminWorkspace = () => {
 
       return await response.json();
     },
-    onSuccess: () => {
-      toast.success("Workspace updated successfully");
+    onSuccess: ({ data }) => {
+      toast.success("Workspace updated");
       queryClient.invalidateQueries({ queryKey: ["admin-workspaces"] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin-workspace", data.$id],
+      });
     },
     onError: () => {
       toast.error("Failed to update workspace");

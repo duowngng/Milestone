@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { PlusIcon } from "lucide-react";
 
 import { Loader } from "lucide-react";
 
@@ -9,19 +9,23 @@ import { DataFilter } from "@/features/workspaces/components/admin/data-filter";
 import { columns } from "@/features/workspaces/components/admin/columns";
 import { DottedSeparator } from "@/components/dotted-separator";
 import { PageError } from "@/components/page-error";
+import { Button } from "@/components/ui/button";
 
 import { AdminWorkspace } from "@/features/workspaces/types";
-import { useGetAdminWorkspaces } from "@/features/workspaces/api/admin/use-get-admin-workspaces";
-import { useWorkspaceFilters } from "@/features/workspaces/api/admin/use-workspace-filters";
+import { useGetWorkspaces } from "@/features/workspaces/api/admin/use-get-admin-workspaces";
+import { useWorkspaceFilters } from "@/features/workspaces/hooks/admin/use-workspace-filters";
+import { useCreateWorkspaceModal } from "@/features/workspaces/hooks/use-create-workspace-modal";
 
 export const AdminWorkspacesClient = () => {
   const [{ name, userId, createdAt, updatedAt }] = useWorkspaceFilters();
-  const { data, isLoading } = useGetAdminWorkspaces({
+  const { data, isLoading } = useGetWorkspaces({
     name,
     userId,
     createdAt,
     updatedAt,
   });
+
+  const { open } = useCreateWorkspaceModal();
 
   if (isLoading) {
     return (
@@ -39,6 +43,10 @@ export const AdminWorkspacesClient = () => {
     <div className="h-full flex flex-col border rounded-lg p-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Workspaces ({data?.total})</h1>
+        <Button onClick={open} size="sm" className="w-full lg:w-auto">
+          <PlusIcon className="size-4 mr-2" />
+          New
+        </Button>
       </div>
 
       <DottedSeparator className="my-4" />

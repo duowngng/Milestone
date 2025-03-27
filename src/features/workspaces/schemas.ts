@@ -23,3 +23,8 @@ export const updateWorkspaceSchema = z.object({
 export const adminCreateWorkspaceSchema = createWorkspaceSchema.extend({
   userId: z.string().trim().min(1, "Required"),
 });
+
+export const adminUpdateWorkspaceSchema = updateWorkspaceSchema.extend({
+  userId: z.string().trim().min(1, "Required"),
+  inviteCode: z.string().trim().length(6, "Must be exactly 6 characters"),
+});

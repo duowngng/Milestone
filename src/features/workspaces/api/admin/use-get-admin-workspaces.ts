@@ -2,19 +2,19 @@ import { useQuery } from "@tanstack/react-query";
 
 import { client } from "@/lib/rpc";
 
-interface UseGetAdminWorkspacesProps {
+interface UseGetWorkspacesProps {
   name?: string | null;
   userId?: string | null;
   createdAt?: string | null;
   updatedAt?: string | null;
 }
 
-export const useGetAdminWorkspaces = ({
+export const useGetWorkspaces = ({
   name,
   userId,
   createdAt,
   updatedAt,
-}: UseGetAdminWorkspacesProps = {}) => {
+}: UseGetWorkspacesProps = {}) => {
   const query = useQuery({
     queryKey: ["admin-workspaces", name, userId, createdAt, updatedAt],
     queryFn: async () => {

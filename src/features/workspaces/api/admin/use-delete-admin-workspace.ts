@@ -12,7 +12,7 @@ type RequestType = InferRequestType<
   (typeof client.api.admin.workspaces)[":workspaceId"]["$delete"]
 >;
 
-export const useDeleteAdminWorkspace = () => {
+export const useDeleteWorkspace = () => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation<ResponseType, Error, RequestType>({
@@ -29,9 +29,12 @@ export const useDeleteAdminWorkspace = () => {
 
       return await response.json();
     },
-    onSuccess: () => {
-      toast.success("Workspace deleted successfully");
+    onSuccess: ({ data }) => {
+      toast.success("Workspace deleted");
       queryClient.invalidateQueries({ queryKey: ["admin-workspaces"] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin-workspace", data.$id],
+      });
     },
     onError: () => {
       toast.error("Failed to delete workspace");

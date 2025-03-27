@@ -1,10 +1,10 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { CopyIcon, TrashIcon } from "lucide-react";
+import { CopyIcon, EditIcon, TrashIcon } from "lucide-react";
 
 import { useConfirm } from "@/hooks/use-confirm";
+import { useEditWorkspaceModal } from "@/features/workspaces/hooks/use-edit-workspace-modal";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -12,7 +12,7 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 
-import { useDeleteAdminWorkspace } from "@/features/workspaces/api/admin/use-delete-admin-workspace";
+import { useDeleteWorkspace } from "@/features/workspaces/api/admin/use-delete-admin-workspace";
 
 interface WorkspaceActionsProps {
   id: string;
@@ -20,8 +20,8 @@ interface WorkspaceActionsProps {
 }
 
 export const WorkspaceActions = ({ id, children }: WorkspaceActionsProps) => {
-  const router = useRouter();
-  const { mutate, isPending } = useDeleteAdminWorkspace();
+  const { mutate, isPending } = useDeleteWorkspace();
+  const { open } = useEditWorkspaceModal();
 
   const [ConfirmDialog, confirm] = useConfirm(
     "Delete Workspace",
@@ -36,14 +36,7 @@ export const WorkspaceActions = ({ id, children }: WorkspaceActionsProps) => {
       return;
     }
 
-    mutate(
-      { param: { workspaceId: id } },
-      {
-        onSuccess: () => {
-          router.refresh();
-        },
-      }
-    );
+    mutate({ param: { workspaceId: id } });
   };
 
   const onCopyId = () => {
@@ -60,6 +53,13 @@ export const WorkspaceActions = ({ id, children }: WorkspaceActionsProps) => {
           <DropdownMenuItem onClick={onCopyId} className="font-medium p-[10px]">
             <CopyIcon className="size-4 mr-2 stroke-2" />
             Copy ID
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => open(id)}
+            className="font-medium p-[10px]"
+          >
+            <EditIcon className="size-4 mr-2 stroke-2" />
+            Edit Workspace
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={onDelete}

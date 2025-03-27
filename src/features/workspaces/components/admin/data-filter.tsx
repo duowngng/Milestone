@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { DatePickerWithRange } from "@/components/date-range-picker";
 
-import { useWorkspaceFilters } from "@/features/workspaces/api/admin/use-workspace-filters";
+import { useWorkspaceFilters } from "@/features/workspaces/hooks/admin/use-workspace-filters";
 
 interface DataFilterProps {
   users: { id: string; name: string }[];

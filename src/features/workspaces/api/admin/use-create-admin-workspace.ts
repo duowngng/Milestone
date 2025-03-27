@@ -12,7 +12,7 @@ type RequestType = InferRequestType<
   (typeof client.api.admin.workspaces)["$post"]
 >;
 
-export const useCreateAdminWorkspace = () => {
+export const useCreateWorkspace = () => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation<ResponseType, Error, RequestType>({
@@ -26,7 +26,7 @@ export const useCreateAdminWorkspace = () => {
       return await response.json();
     },
     onSuccess: () => {
-      toast.success("Workspace created successfully");
+      toast.success("Workspace created");
       queryClient.invalidateQueries({ queryKey: ["admin-workspaces"] });
     },
     onError: () => {
