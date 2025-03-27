@@ -5,36 +5,37 @@ import { InferRequestType, InferResponseType } from "hono";
 import { client } from "@/lib/rpc";
 
 type ResponseType = InferResponseType<
-  (typeof client.api.projects)[":projectId"]["$patch"],
+  (typeof client.api.admin.workspaces)[":workspaceId"]["$patch"],
   200
 >;
 type RequestType = InferRequestType<
-  (typeof client.api.projects)[":projectId"]["$patch"]
+  (typeof client.api.admin.workspaces)[":workspaceId"]["$patch"]
 >;
 
-export const useUpdateProject = () => {
+export const useUpdateAdminWorkspace = () => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation<ResponseType, Error, RequestType>({
     mutationFn: async ({ form, param }) => {
-      const response = await client.api.projects[":projectId"]["$patch"]({
+      const response = await client.api.admin.workspaces[":workspaceId"][
+        "$patch"
+      ]({
         form,
         param,
       });
 
       if (!response.ok) {
-        throw new Error("Failed to update project");
+        throw new Error("Failed to update workspace");
       }
 
       return await response.json();
     },
-    onSuccess: ({ data }) => {
-      toast.success("Project updated");
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
-      queryClient.invalidateQueries({ queryKey: ["project", data.$id] });
+    onSuccess: () => {
+      toast.success("Workspace updated successfully");
+      queryClient.invalidateQueries({ queryKey: ["admin-workspaces"] });
     },
     onError: () => {
-      toast.error("Failed to update project");
+      toast.error("Failed to update workspace");
     },
   });
 

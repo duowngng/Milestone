@@ -45,6 +45,7 @@ const app = new Hono()
 
     return c.json({ data: workspaces });
   })
+
   .get("/:workspaceId", sessionMiddleware, async (c) => {
     const user = c.get("user");
     const databases = c.get("databases");
@@ -68,6 +69,7 @@ const app = new Hono()
 
     return c.json({ data: workspace });
   })
+
   .get("/:workspaceId/info", sessionMiddleware, async (c) => {
     const databases = c.get("databases");
     const { workspaceId } = c.req.param();
@@ -86,6 +88,7 @@ const app = new Hono()
       },
     });
   })
+
   .post(
     "/",
     zValidator("form", createWorkspaceSchema),
@@ -137,6 +140,7 @@ const app = new Hono()
       return c.json({ data: workspace });
     }
   )
+
   .patch(
     "/:workspaceId",
     sessionMiddleware,
@@ -193,6 +197,7 @@ const app = new Hono()
       return c.json({ data: workspace });
     }
   )
+
   .delete("/:workspaceId", sessionMiddleware, async (c) => {
     const databases = c.get("databases");
     const user = c.get("user");
@@ -213,6 +218,7 @@ const app = new Hono()
 
     return c.json({ data: { $id: workspaceId } });
   })
+
   .post("/:workspaceId/reset-invite-code", sessionMiddleware, async (c) => {
     const databases = c.get("databases");
     const user = c.get("user");
@@ -240,6 +246,7 @@ const app = new Hono()
 
     return c.json({ data: workspace });
   })
+
   .post(
     "/:workspaceId/join",
     sessionMiddleware,
@@ -280,6 +287,7 @@ const app = new Hono()
       return c.json({ data: workspace });
     }
   )
+
   .get("/:workspaceId/analytics", sessionMiddleware, async (c) => {
     const databases = c.get("databases");
     const user = c.get("user");

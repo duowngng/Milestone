@@ -12,20 +12,20 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 
-import { useDeleteUser } from "@/features/users/api/admin/use-delete-admin-user";
+import { useDeleteAdminWorkspace } from "@/features/workspaces/api/admin/use-delete-admin-workspace";
 
-interface UserActionsProps {
+interface WorkspaceActionsProps {
   id: string;
   children: React.ReactNode;
 }
 
-export const UserActions = ({ id, children }: UserActionsProps) => {
+export const WorkspaceActions = ({ id, children }: WorkspaceActionsProps) => {
   const router = useRouter();
-  const { mutate, isPending } = useDeleteUser();
+  const { mutate, isPending } = useDeleteAdminWorkspace();
 
   const [ConfirmDialog, confirm] = useConfirm(
-    "Delete User",
-    "Are you sure you want to delete this user?",
+    "Delete Workspace",
+    "Are you sure you want to delete this workspace?",
     "destructive"
   );
 
@@ -37,7 +37,7 @@ export const UserActions = ({ id, children }: UserActionsProps) => {
     }
 
     mutate(
-      { param: { userId: id } },
+      { param: { workspaceId: id } },
       {
         onSuccess: () => {
           router.refresh();
@@ -48,7 +48,7 @@ export const UserActions = ({ id, children }: UserActionsProps) => {
 
   const onCopyId = () => {
     navigator.clipboard.writeText(id);
-    toast.success("User ID copied to clipboard");
+    toast.success("Workspace ID copied to clipboard");
   };
 
   return (
@@ -67,7 +67,7 @@ export const UserActions = ({ id, children }: UserActionsProps) => {
             className="text-red-700 focus:text-red-700 font-medium p-[10px]"
           >
             <TrashIcon className="size-4 mr-2 stroke-2" />
-            Delete User
+            Delete Workspace
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

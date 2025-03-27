@@ -6,3 +6,10 @@ export type Workspace = Models.Document & {
   inviteCode: string;
   userId: string;
 };
+
+export type AdminWorkspace = Workspace & {
+  user: {
+    name: string;
+    email: string;
+  };
+};
