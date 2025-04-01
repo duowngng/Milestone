@@ -1,6 +1,7 @@
-import { CreateWorkspaceModal } from "@/features/workspaces/components/create-workspace-modal";
+import { CreateAdminWorkspaceModal } from "@/features/workspaces/components/admin/create-admin-workspace-modal";
 import { CreateProjectModal } from "@/features/projects/components/create-project-modal";
 import { CreateTaskModal } from "@/features/tasks/components/create-task-modal";
+import { EditAdminWorkspaceModal } from "@/features/workspaces/components/admin/edit-admin-workspace-modal";
 import { EditTaskModal } from "@/features/tasks/components/edit-task-modal";
 
 import { Navbar } from "@/components/navbar";
@@ -13,9 +14,10 @@ interface DashboardLayoutProps {
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   return (
     <div className="min-h-screen">
-      <CreateWorkspaceModal />
+      <CreateAdminWorkspaceModal />
       <CreateProjectModal />
       <CreateTaskModal />
+      <EditAdminWorkspaceModal />
       <EditTaskModal />
       <div className="flex w-full h-full">
         <div className="fixed left-0 top-0 hidden lg:block lg:w-[264px] h-full overflow-y-auto">

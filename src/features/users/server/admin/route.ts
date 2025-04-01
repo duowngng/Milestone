@@ -59,6 +59,25 @@ const app = new Hono()
       });
     }
   )
+
+  .get("/:userId", sessionMiddleware, adminMiddleware, async (c) => {
+    const { users } = await createAdminClient();
+    const { userId } = c.req.param();
+
+    const user = await users.get(userId);
+
+    const populatedUser = {
+      $id: user.$id,
+      name: user.name,
+      email: user.email,
+      registration: user.registration,
+      accessedAt: user.accessedAt,
+      labels: user.labels || [],
+    };
+
+    return c.json({ data: populatedUser });
+  })
+
   .delete("/:userId", sessionMiddleware, adminMiddleware, async (c) => {
     const { users } = await createAdminClient();
     const { userId } = c.req.param();

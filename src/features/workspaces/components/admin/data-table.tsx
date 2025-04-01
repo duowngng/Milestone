@@ -28,15 +28,17 @@ import { Button } from "@/components/ui/button";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  search?: string;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  search,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
+    search ? [{ id: "name", value: search }] : []
   );
 
   const table = useReactTable({
@@ -53,6 +55,10 @@ export function DataTable<TData, TValue>({
       columnFilters,
     },
   });
+
+  React.useEffect(() => {
+    setColumnFilters(search ? [{ id: "name", value: search }] : []);
+  }, [search]);
 
   return (
     <div>

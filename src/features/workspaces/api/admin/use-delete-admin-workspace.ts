@@ -5,11 +5,11 @@ import { InferRequestType, InferResponseType } from "hono";
 import { client } from "@/lib/rpc";
 
 type ResponseType = InferResponseType<
-  (typeof client.api.workspaces)[":workspaceId"]["$delete"],
+  (typeof client.api.admin.workspaces)[":workspaceId"]["$delete"],
   200
 >;
 type RequestType = InferRequestType<
-  (typeof client.api.workspaces)[":workspaceId"]["$delete"]
+  (typeof client.api.admin.workspaces)[":workspaceId"]["$delete"]
 >;
 
 export const useDeleteWorkspace = () => {
@@ -17,7 +17,9 @@ export const useDeleteWorkspace = () => {
 
   const mutation = useMutation<ResponseType, Error, RequestType>({
     mutationFn: async ({ param }) => {
-      const response = await client.api.workspaces[":workspaceId"]["$delete"]({
+      const response = await client.api.admin.workspaces[":workspaceId"][
+        "$delete"
+      ]({
         param,
       });
 
@@ -29,8 +31,10 @@ export const useDeleteWorkspace = () => {
     },
     onSuccess: ({ data }) => {
       toast.success("Workspace deleted");
-      queryClient.invalidateQueries({ queryKey: ["workspaces"] });
-      queryClient.invalidateQueries({ queryKey: ["workspace", data.$id] });
+      queryClient.invalidateQueries({ queryKey: ["admin-workspaces"] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin-workspace", data.$id],
+      });
     },
     onError: () => {
       toast.error("Failed to delete workspace");

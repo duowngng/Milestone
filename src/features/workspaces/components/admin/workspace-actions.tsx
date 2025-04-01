@@ -1,10 +1,10 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { CopyIcon, TrashIcon } from "lucide-react";
+import { CopyIcon, EditIcon, TrashIcon } from "lucide-react";
 
 import { useConfirm } from "@/hooks/use-confirm";
+import { useEditWorkspaceModal } from "@/features/workspaces/hooks/use-edit-workspace-modal";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -12,20 +12,20 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 
-import { useDeleteUser } from "@/features/users/api/admin/use-delete-admin-user";
+import { useDeleteWorkspace } from "@/features/workspaces/api/admin/use-delete-admin-workspace";
 
-interface UserActionsProps {
+interface WorkspaceActionsProps {
   id: string;
   children: React.ReactNode;
 }
 
-export const UserActions = ({ id, children }: UserActionsProps) => {
-  const router = useRouter();
-  const { mutate, isPending } = useDeleteUser();
+export const WorkspaceActions = ({ id, children }: WorkspaceActionsProps) => {
+  const { mutate, isPending } = useDeleteWorkspace();
+  const { open } = useEditWorkspaceModal();
 
   const [ConfirmDialog, confirm] = useConfirm(
-    "Delete User",
-    "Are you sure you want to delete this user?",
+    "Delete Workspace",
+    "Are you sure you want to delete this workspace?",
     "destructive"
   );
 
@@ -36,19 +36,12 @@ export const UserActions = ({ id, children }: UserActionsProps) => {
       return;
     }
 
-    mutate(
-      { param: { userId: id } },
-      {
-        onSuccess: () => {
-          router.refresh();
-        },
-      }
-    );
+    mutate({ param: { workspaceId: id } });
   };
 
   const onCopyId = () => {
     navigator.clipboard.writeText(id);
-    toast.success("User ID copied to clipboard");
+    toast.success("Workspace ID copied to clipboard");
   };
 
   return (
@@ -62,12 +55,19 @@ export const UserActions = ({ id, children }: UserActionsProps) => {
             Copy ID
           </DropdownMenuItem>
           <DropdownMenuItem
+            onClick={() => open(id)}
+            className="font-medium p-[10px]"
+          >
+            <EditIcon className="size-4 mr-2 stroke-2" />
+            Edit Workspace
+          </DropdownMenuItem>
+          <DropdownMenuItem
             onClick={onDelete}
             disabled={isPending}
             className="text-red-700 focus:text-red-700 font-medium p-[10px]"
           >
             <TrashIcon className="size-4 mr-2 stroke-2" />
-            Delete User
+            Delete Workspace
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

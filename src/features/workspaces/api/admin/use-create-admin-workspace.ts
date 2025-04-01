@@ -5,30 +5,32 @@ import { InferRequestType, InferResponseType } from "hono";
 import { client } from "@/lib/rpc";
 
 type ResponseType = InferResponseType<
-  (typeof client.api.projects)["$post"],
+  (typeof client.api.admin.workspaces)["$post"],
   200
 >;
-type RequestType = InferRequestType<(typeof client.api.projects)["$post"]>;
+type RequestType = InferRequestType<
+  (typeof client.api.admin.workspaces)["$post"]
+>;
 
-export const useCreateProject = () => {
+export const useCreateWorkspace = () => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation<ResponseType, Error, RequestType>({
     mutationFn: async ({ form }) => {
-      const response = await client.api.projects["$post"]({ form });
+      const response = await client.api.admin.workspaces.$post({ form });
 
       if (!response.ok) {
-        throw new Error("Failed to create project");
+        throw new Error("Failed to create workspace");
       }
 
       return await response.json();
     },
     onSuccess: () => {
-      toast.success("Project created");
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      toast.success("Workspace created");
+      queryClient.invalidateQueries({ queryKey: ["admin-workspaces"] });
     },
     onError: () => {
-      toast.error("Failed to create project");
+      toast.error("Failed to create workspace");
     },
   });
 
