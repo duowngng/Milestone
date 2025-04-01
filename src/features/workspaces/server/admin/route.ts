@@ -18,7 +18,7 @@ import {
   updateWorkspaceSchema,
 } from "../../schemas";
 
-import { MemberRole } from "@/features/members/type";
+import { MemberRole } from "@/features/members/types";
 import { Workspace } from "../../types";
 
 const app = new Hono()

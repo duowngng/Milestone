@@ -16,7 +16,7 @@ import { sessionMiddleware } from "@/lib/session-middleware";
 import { generateInviteCode } from "@/lib/utils";
 import { createWorkspaceSchema, updateWorkspaceSchema } from "../schemas";
 
-import { MemberRole } from "@/features/members/type";
+import { MemberRole } from "@/features/members/types";
 import { TaskStatus } from "@/features/tasks/types";
 import { getMember } from "@/features/members/utils";
 import { Workspace } from "../types";

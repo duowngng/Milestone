@@ -6,7 +6,7 @@ import { PlusIcon, CalendarIcon, SettingsIcon } from "lucide-react";
 
 import { Task } from "@/features/tasks/types";
 import { Project } from "@/features/projects/types";
-import { Member } from "@/features/members/type";
+import { Member } from "@/features/members/types";
 import { useGetMembers } from "@/features/members/api/use-get-members";
 import { useGetProjects } from "@/features/projects/api/use-get-projects";
 import { useGetTasks } from "@/features/tasks/api/use-get-tasks";
