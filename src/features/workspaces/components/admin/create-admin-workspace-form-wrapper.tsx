@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader } from "lucide-react";
 
-import { useGetAdminUsers } from "@/features/users/api//admin/use-get-admin-users";
+import { useGetUsers } from "@/features/users/api//admin/use-get-admin-users";
 import { CreateAdminWorkspaceForm } from "./create-admin-workspace-form";
 
 interface CreateAdminWorkspaceFormWrapperProps {
@@ -11,7 +11,7 @@ interface CreateAdminWorkspaceFormWrapperProps {
 export const CreateAdminWorkspaceFormWrapper = ({
   onCancel,
 }: CreateAdminWorkspaceFormWrapperProps) => {
-  const { data, isLoading } = useGetAdminUsers();
+  const { data, isLoading } = useGetUsers();
 
   const userOptions = data?.users.map((user) => ({
     id: user.$id,

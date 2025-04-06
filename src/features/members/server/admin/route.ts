@@ -1,31 +1,38 @@
-import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { ID, Query } from "node-appwrite";
+import { createAdminClient } from "@/lib/appwrite";
 
 import { adminMiddleware } from "@/lib/admin-middleware";
 import { sessionMiddleware } from "@/lib/session-middleware";
-import { DATABASE_ID, MEMBERS_ID } from "@/config";
+import { DATABASE_ID, MEMBERS_ID, WORKSPACES_ID } from "@/config";
 
 import {
   adminCreateMemberSchema,
   adminUpdateMemberSchema,
 } from "../../schemas";
 
-import { MemberRole } from "../../types";
+import { AdminMember, Member, MemberRole } from "../../types";
 
 const app = new Hono()
   .get("/", sessionMiddleware, adminMiddleware, async (c) => {
+    const { users } = await createAdminClient();
     const databases = c.get("databases");
 
-    const name = c.req.query("name");
+    const userId = c.req.query("userId");
+    const workspaceId = c.req.query("workspaceId");
     const role = c.req.query("role");
     const createdAt = c.req.query("createdAt");
+    const updatedAt = c.req.query("updatedAt");
 
     const queries = [Query.orderDesc("$createdAt")];
 
-    if (name) queries.push(Query.contains("name", name));
+    if (userId) queries.push(Query.equal("userId", userId));
+
+    if (workspaceId) queries.push(Query.equal("workspaceId", workspaceId));
+
     if (role) queries.push(Query.equal("role", role));
+
     if (createdAt) {
       try {
         const [from, to] = decodeURIComponent(createdAt).split(",");
@@ -36,20 +43,70 @@ const app = new Hono()
       }
     }
 
+    if (updatedAt) {
+      try {
+        const [from, to] = decodeURIComponent(updatedAt).split(",");
+        if (from) queries.push(Query.greaterThanEqual("$updatedAt", from));
+        if (to) queries.push(Query.lessThanEqual("$updatedAt", to));
+      } catch (error) {
+        console.error("Invalid updatedAt format", error);
+      }
+    }
+
     const members = await databases.listDocuments(
       DATABASE_ID,
       MEMBERS_ID,
       queries
     );
 
-    return c.json({ data: members });
+    const userIds = Array.from(new Set(members.documents.map((m) => m.userId)));
+    const workspaceIds = Array.from(
+      new Set(members.documents.map((m) => m.workspaceId))
+    );
+
+    const usersList = await users.list([Query.equal("$id", userIds)]);
+    const workspaces = await databases.listDocuments(
+      DATABASE_ID,
+      WORKSPACES_ID,
+      [Query.equal("$id", workspaceIds)]
+    );
+
+    const userMap = Object.fromEntries(
+      usersList.users.map((user) => [
+        user.$id,
+        { name: user.name, email: user.email },
+      ])
+    );
+
+    const workspaceMap = Object.fromEntries(
+      workspaces.documents.map((workspace) => [
+        workspace.$id,
+        { name: workspace.name },
+      ])
+    );
+
+    const populatedMembers = members.documents.map(
+      (member) =>
+        ({
+          ...member,
+          user: userMap[member.userId],
+          workspace: workspaceMap[member.workspaceId],
+        } as AdminMember)
+    );
+
+    return c.json({
+      data: {
+        total: members.total,
+        documents: populatedMembers,
+      },
+    });
   })
 
   .get("/:memberId", sessionMiddleware, adminMiddleware, async (c) => {
     const databases = c.get("databases");
     const { memberId } = c.req.param();
 
-    const member = await databases.getDocument(
+    const member = await databases.getDocument<Member>(
       DATABASE_ID,
       MEMBERS_ID,
       memberId
@@ -91,6 +148,8 @@ const app = new Hono()
       const databases = c.get("databases");
       const { memberId } = c.req.param();
       const { role, workspaceId, userId } = c.req.valid("form");
+
+      console.log(memberId);
 
       const memberToUpdate = await databases.getDocument(
         DATABASE_ID,

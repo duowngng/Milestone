@@ -1,17 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
 import { client } from "@/lib/rpc";
 
-interface UseGetAdminUsersProps {
+interface UseGetUsersProps {
   search?: string;
   limit?: number;
   offset?: number;
 }
 
-export const useGetAdminUsers = ({
+export const useGetUsers = ({
   search,
   limit = 25,
   offset = 0,
-}: UseGetAdminUsersProps = {}) => {
+}: UseGetUsersProps = {}) => {
   const query = useQuery({
     queryKey: ["admin-users", search, limit, offset],
     queryFn: async () => {

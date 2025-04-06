@@ -19,14 +19,14 @@ import {
 } from "../../schemas";
 
 import { MemberRole } from "@/features/members/types";
-import { Workspace } from "../../types";
+import { AdminWorkspace, Workspace } from "../../types";
 
 const app = new Hono()
   .get("/", sessionMiddleware, adminMiddleware, async (c) => {
     const { users } = await createAdminClient();
     const databases = c.get("databases");
 
-    const name = c.req.query("search");
+    const name = c.req.query("name");
     const userId = c.req.query("userId");
     const createdAt = c.req.query("createdAt");
     const updatedAt = c.req.query("updatedAt");
@@ -76,19 +76,16 @@ const app = new Hono()
       ])
     );
 
-    const populatedWorkspaces = workspaces.documents.map((workspace) => ({
-      $id: workspace.$id,
-      userId: workspace.userId,
-      name: workspace.name,
-      imageUrl: workspace.imageUrl,
-      inviteCode: workspace.inviteCode,
-      $createdAt: workspace.$createdAt,
-      $updatedAt: workspace.$updatedAt,
-      user: {
-        name: userMap[workspace.userId].name,
-        email: userMap[workspace.userId].email,
-      },
-    }));
+    const populatedWorkspaces = workspaces.documents.map(
+      (workspace) =>
+        ({
+          ...workspace,
+          user: {
+            name: userMap[workspace.userId].name,
+            email: userMap[workspace.userId].email,
+          },
+        } as AdminWorkspace)
+    );
 
     return c.json({
       data: {

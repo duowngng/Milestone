@@ -3,24 +3,37 @@ import { useQuery } from "@tanstack/react-query";
 import { client } from "@/lib/rpc";
 
 interface UseGetMembersProps {
-  name?: string | null;
+  userId?: string | null;
+  workspaceId?: string | null;
   role?: string | null;
   createdAt?: string | null;
+  updatedAt?: string | null;
 }
 
 export const useGetMembers = ({
-  name,
+  userId,
+  workspaceId,
   role,
   createdAt,
+  updatedAt,
 }: UseGetMembersProps = {}) => {
   return useQuery({
-    queryKey: ["admin-members", name, role, createdAt],
+    queryKey: [
+      "admin-members",
+      userId,
+      workspaceId,
+      role,
+      createdAt,
+      updatedAt,
+    ],
     queryFn: async () => {
       const response = await client.api.admin.members.$get({
         query: {
-          name: name ?? undefined,
+          userId: userId ?? undefined,
+          workspaceId: workspaceId ?? undefined,
           role: role ?? undefined,
           createdAt: createdAt ?? undefined,
+          updatedAt: updatedAt ?? undefined,
         },
       });
 
