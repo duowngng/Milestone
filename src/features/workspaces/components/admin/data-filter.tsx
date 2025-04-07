@@ -1,6 +1,8 @@
 "use client";
 
 import { UserIcon } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useDebounce } from "@/hooks/use-debounce";
 
 import { Input } from "@/components/ui/input";
 import {
@@ -11,17 +13,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { DatePickerWithRange } from "@/components/date-range-picker";
+import { DateRangePicker } from "@/components/date-range-picker";
 
 import { useWorkspaceFilters } from "@/features/workspaces/hooks/admin/use-workspace-filters";
+import { useGetUsers } from "@/features/users/api/admin/use-get-admin-users";
 
-interface DataFilterProps {
-  users: { id: string; name: string }[];
-}
+export const DataFilter = () => {
+  const { data: usersData } = useGetUsers();
 
-export const DataFilter = ({ users }: DataFilterProps) => {
+  const userOptions = usersData?.users.map((user) => ({
+    value: user.$id,
+    label: user.name,
+  }));
+
   const [{ name, userId, createdAt, updatedAt }, setFilters] =
     useWorkspaceFilters();
+  const [searchTerm, setSearchTerm] = useState(name || "");
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   const onUserChange = (value: string) => {
     setFilters({ userId: value === "all" ? null : value });
@@ -44,8 +52,14 @@ export const DataFilter = ({ users }: DataFilterProps) => {
   };
 
   const onSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFilters({ name: e.target.value });
+    setSearchTerm(e.target.value);
   };
+
+  useEffect(() => {
+    if (debouncedSearchTerm !== name) {
+      setFilters({ name: debouncedSearchTerm });
+    }
+  }, [debouncedSearchTerm, name, setFilters]);
 
   return (
     <div className="flex items-center justify-between">
@@ -60,15 +74,15 @@ export const DataFilter = ({ users }: DataFilterProps) => {
           <SelectContent>
             <SelectItem value="all">All users</SelectItem>
             <SelectSeparator />
-            {users.map((user) => (
-              <SelectItem key={user.id} value={user.id}>
-                {user.name}
+            {userOptions?.map((user) => (
+              <SelectItem key={user.value} value={user.value}>
+                {user.label}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
 
-        <DatePickerWithRange
+        <DateRangePicker
           placeholder="Created at"
           className="w-full lg:w-auto h-8"
           value={
@@ -86,7 +100,7 @@ export const DataFilter = ({ users }: DataFilterProps) => {
           onChange={onCreatedAtChange}
         />
 
-        <DatePickerWithRange
+        <DateRangePicker
           placeholder="Updated at"
           className="w-full lg:w-auto h-8"
           value={
@@ -106,7 +120,7 @@ export const DataFilter = ({ users }: DataFilterProps) => {
       </div>
       <Input
         placeholder="Search by name"
-        value={name || ""}
+        value={searchTerm}
         onChange={onSearchChange}
         className="w-full lg:w-auto h-8"
       />

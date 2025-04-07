@@ -1,8 +1,6 @@
 "use client";
 
-import { PlusIcon } from "lucide-react";
-
-import { Loader } from "lucide-react";
+import { Loader, PlusIcon } from "lucide-react";
 
 import { DataTable } from "@/features/workspaces/components/admin/data-table";
 import { DataFilter } from "@/features/workspaces/components/admin/data-filter";
@@ -51,19 +49,7 @@ export const AdminWorkspacesClient = () => {
 
       <DottedSeparator className="my-4" />
 
-      <DataFilter
-        users={Array.from(
-          new Map(
-            data?.documents.map((workspace) => [
-              workspace.userId,
-              {
-                id: workspace.userId,
-                name: workspace.user?.name,
-              },
-            ])
-          ).values()
-        )}
-      />
+      <DataFilter />
 
       <DottedSeparator className="my-4" />
 

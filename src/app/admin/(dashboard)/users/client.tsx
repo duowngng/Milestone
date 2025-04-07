@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { DottedSeparator } from "@/components/dotted-separator";
 import { PageError } from "@/components/page-error";
 
-import { useGetAdminUsers } from "@/features/users/api/admin/use-get-admin-users";
+import { useGetUsers } from "@/features/users/api/admin/use-get-admin-users";
 
 export const AdminUsersClient = () => {
   const [search, setSearch] = useState("");
@@ -28,7 +28,7 @@ export const AdminUsersClient = () => {
     [search]
   );
 
-  const { data, isLoading } = useGetAdminUsers({
+  const { data, isLoading } = useGetUsers({
     search: debouncedSearch,
     limit,
     offset: (page - 1) * limit,

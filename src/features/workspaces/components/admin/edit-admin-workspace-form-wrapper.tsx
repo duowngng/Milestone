@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader } from "lucide-react";
 
-import { useGetAdminUsers } from "@/features/users/api//admin/use-get-admin-users";
+import { useGetUsers } from "@/features/users/api//admin/use-get-admin-users";
 import { EditAdminWorkspaceForm } from "./edit-admin-workspace-form";
 import { useGetWorkspace } from "../../api/admin/use-get-admin-workspace";
 
@@ -16,7 +16,7 @@ export const EditAdminWorkspaceFormWrapper = ({
 }: EditAdminWorkspaceFormWrapperProps) => {
   const { data: initialValues, isLoading: isLoadingWorkspace } =
     useGetWorkspace({ workspaceId: id });
-  const { data: users, isLoading: isLoadingUsers } = useGetAdminUsers();
+  const { data: users, isLoading: isLoadingUsers } = useGetUsers();
 
   const userOptions = users?.users.map((user) => ({
     id: user.$id,

@@ -25,6 +25,10 @@ export const adminCreateWorkspaceSchema = createWorkspaceSchema.extend({
 });
 
 export const adminUpdateWorkspaceSchema = updateWorkspaceSchema.extend({
-  userId: z.string().trim().min(1, "Required"),
-  inviteCode: z.string().trim().length(6, "Must be exactly 6 characters"),
+  userId: z.string().trim().min(1, "Must be at least 1 character").optional(),
+  inviteCode: z
+    .string()
+    .trim()
+    .length(6, "Must be exactly 6 characters")
+    .optional(),
 });

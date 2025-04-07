@@ -10,3 +10,13 @@ export type Member = Models.Document & {
   userId: string;
   role: MemberRole;
 };
+
+export type AdminMember = Member & {
+  user: {
+    name: string;
+    email: string;
+  };
+  workspace: {
+    name: string;
+  };
+};

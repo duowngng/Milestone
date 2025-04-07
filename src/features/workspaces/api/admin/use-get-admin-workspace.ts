@@ -8,7 +8,7 @@ interface UseGetWorkspaceProps {
 
 export const useGetWorkspace = ({ workspaceId }: UseGetWorkspaceProps) => {
   return useQuery({
-    queryKey: ["workspace", workspaceId],
+    queryKey: ["admin-workspace", workspaceId],
     queryFn: async () => {
       const response = await client.api.admin.workspaces[":workspaceId"].$get({
         param: { workspaceId },
