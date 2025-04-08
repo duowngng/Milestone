@@ -5,3 +5,9 @@ export type Project = Models.Document & {
   imageUrl: string;
   workspaceId: string;
 };
+
+export type AdminProject = Project & {
+  workspace: {
+    name: string;
+  };
+};

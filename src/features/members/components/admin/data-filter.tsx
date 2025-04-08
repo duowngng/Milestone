@@ -69,7 +69,6 @@ export const DataFilter = () => {
 
   return (
     <div className="flex flex-col lg:flex-row gap-2">
-      {/* User Filter */}
       <Select value={userId || "all"} onValueChange={onUserChange}>
         <SelectTrigger className="w-full lg:w-auto h-8">
           <div className="flex items-center pr-2">
@@ -88,7 +87,6 @@ export const DataFilter = () => {
         </SelectContent>
       </Select>
 
-      {/* Workspace Filter */}
       <Select value={workspaceId || "all"} onValueChange={onWorkspaceChange}>
         <SelectTrigger className="w-full lg:w-auto h-8">
           <div className="flex items-center pr-2">
