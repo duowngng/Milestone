@@ -3,6 +3,7 @@
 import { Loader, PlusIcon } from "lucide-react";
 
 import { DataTable } from "@/features/projects/components/admin/data-table";
+import { DataFilter } from "@/features/projects/components/admin/data-filter";
 import { columns } from "@/features/projects/components/admin/columns";
 import { DottedSeparator } from "@/components/dotted-separator";
 import { PageError } from "@/components/page-error";
@@ -11,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { AdminProject } from "@/features/projects/types";
 import { useGetProjects } from "@/features/projects/api/admin/use-get-admin-projects";
 import { useProjectFilters } from "@/features/projects/hooks/admin/use-project-filters";
-import { DataFilter } from "@/features/projects/components/admin/data-filter";
+import { useCreateProjectModal } from "@/features/projects/hooks/use-create-project-modal";
 
 export const AdminProjectsClient = () => {
   const [{ name, workspaceId, createdAt, updatedAt }] = useProjectFilters();
@@ -21,6 +22,8 @@ export const AdminProjectsClient = () => {
     createdAt,
     updatedAt,
   });
+
+  const { open } = useCreateProjectModal();
 
   if (isLoading) {
     return (
@@ -38,7 +41,7 @@ export const AdminProjectsClient = () => {
     <div className="h-full flex flex-col border rounded-lg p-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Projects ({data?.total})</h1>
-        <Button size="sm" className="w-full lg:w-auto">
+        <Button onClick={open} size="sm" className="w-full lg:w-auto">
           <PlusIcon className="size-4 mr-2" />
           New
         </Button>

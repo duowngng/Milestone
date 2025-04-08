@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { CopyIcon, EditIcon, TrashIcon } from "lucide-react";
 
 import { useConfirm } from "@/hooks/use-confirm";
+import { useEditProjectModal } from "@/features/projects/hooks/use-edit-project-modal";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -20,6 +21,7 @@ interface ProjectActionsProps {
 
 export const ProjectActions = ({ id, children }: ProjectActionsProps) => {
   const { mutate, isPending } = useDeleteProject();
+  const { open } = useEditProjectModal();
 
   const [ConfirmDialog, confirm] = useConfirm(
     "Delete Project",
@@ -51,6 +53,13 @@ export const ProjectActions = ({ id, children }: ProjectActionsProps) => {
           <DropdownMenuItem onClick={onCopyId} className="font-medium p-[10px]">
             <CopyIcon className="size-4 mr-2 stroke-2" />
             Copy ID
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => open(id)}
+            className="font-medium p-[10px]"
+          >
+            <EditIcon className="size-4 mr-2 stroke-2" />
+            Edit Project
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={onDelete}
