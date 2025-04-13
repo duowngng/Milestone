@@ -6,7 +6,7 @@ import { useWorkspaceId } from "../../workspaces/hooks/use-workspace-id";
 import { useGetMembers } from "@/features/members/api/use-get-members";
 import { useDeleteMember } from "../api/use-delete-member";
 import { useUpdateMember } from "../api/use-update-member";
-import { MemberRole } from "../type";
+import { MemberRole } from "../types";
 
 import { ArrowLeftIcon, MoreVerticalIcon } from "lucide-react";
 import { useConfirm } from "@/hooks/use-confirm";
@@ -15,12 +15,7 @@ import { Fragment } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { DottedSeparator } from "@/components/dotted-separator";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,14 +32,10 @@ export const MembersList = () => {
   );
 
   const { data } = useGetMembers({ workspaceId });
-  const {
-    mutate: deleteMember,
-    isPending: isDeletingMember,
-  } = useDeleteMember();
-  const {
-    mutate: updateMember,
-    isPending: isUpdatingMember,
-  } = useUpdateMember();
+  const { mutate: deleteMember, isPending: isDeletingMember } =
+    useDeleteMember();
+  const { mutate: updateMember, isPending: isUpdatingMember } =
+    useUpdateMember();
 
   const handleUpdateMember = (memberId: string, role: MemberRole) => {
     updateMember({
@@ -56,30 +47,31 @@ export const MembersList = () => {
   const handleDeleteMember = async (memberId: string) => {
     const ok = await confirm();
 
-    if(!ok) {
+    if (!ok) {
       return;
     }
 
-    deleteMember({ param: { memberId } }, {
-      onSuccess: () => {
-        window.location.reload();
-      },
-    });
+    deleteMember(
+      { param: { memberId } },
+      {
+        onSuccess: () => {
+          window.location.reload();
+        },
+      }
+    );
   };
 
   return (
     <Card className="w-full h-full border-none shadow-none">
       <ConfirmDialog />
       <CardHeader className="flex flex-row items-center gap-x-4 p-7 space-y-0">
-        <Button asChild size="sm" variant="secondary" >
+        <Button asChild size="sm" variant="secondary">
           <Link href={`/workspaces/${workspaceId}`}>
             <ArrowLeftIcon className="size-4 mr-2" />
             Back
           </Link>
         </Button>
-        <CardTitle className="text-xl font-bold">
-          Members list
-        </CardTitle>
+        <CardTitle className="text-xl font-bold">Members list</CardTitle>
       </CardHeader>
       <div className="px-7">
         <DottedSeparator />
@@ -99,35 +91,35 @@ export const MembersList = () => {
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button
-                    className="ml-auto"
-                    size="icon"
-                    variant="secondary"
-                  >
+                  <Button className="ml-auto" size="icon" variant="secondary">
                     <MoreVerticalIcon className="size-4 text-muted-foreground" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                   <DropdownMenuItem
                     className="font-medium"
-                    onClick={() => handleUpdateMember(member.$id, MemberRole.ADMIN)}
+                    onClick={() =>
+                      handleUpdateMember(member.$id, MemberRole.ADMIN)
+                    }
                     disabled={isUpdatingMember}
                   >
-                      Set as Administrator
+                    Set as Administrator
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="font-medium"
-                    onClick={() => handleUpdateMember(member.$id, MemberRole.MEMBER)}
+                    onClick={() =>
+                      handleUpdateMember(member.$id, MemberRole.MEMBER)
+                    }
                     disabled={isUpdatingMember}
                   >
-                      Set as Member
+                    Set as Member
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="font-medium text-red-700"
                     onClick={() => handleDeleteMember(member.$id)}
                     disabled={isDeletingMember}
                   >
-                      Remove {member.name}
+                    Remove {member.name}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

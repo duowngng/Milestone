@@ -31,24 +31,21 @@ import { useDeleteWorkspace } from "../api/use-delete-workspace";
 import { Workspace } from "../types";
 import { toast } from "sonner";
 
-
-
 interface EditWorkspaceFormProps {
   onCancel?: () => void;
   initialValues: Workspace;
-};
+}
 
-export const EditWorkspaceForm = ({ onCancel, initialValues }: EditWorkspaceFormProps) => {
+export const EditWorkspaceForm = ({
+  onCancel,
+  initialValues,
+}: EditWorkspaceFormProps) => {
   const router = useRouter();
   const { mutate, isPending } = useUpdateWorkspace();
-  const {
-    mutate: resetInviteCode,
-    isPending: isResetingInviteCode,
-  } = useResetInviteCode();
-  const {
-    mutate: deleteWorkspace,
-    isPending: isDeletingWorkspace,
-  } = useDeleteWorkspace();
+  const { mutate: resetInviteCode, isPending: isResetingInviteCode } =
+    useResetInviteCode();
+  const { mutate: deleteWorkspace, isPending: isDeletingWorkspace } =
+    useDeleteWorkspace();
 
   const [ResetInviteCodeDialog, confirmResetInviteCode] = useConfirm(
     "Reset Invite Code",
@@ -66,7 +63,7 @@ export const EditWorkspaceForm = ({ onCancel, initialValues }: EditWorkspaceForm
 
     if (!ok) {
       return;
-    };
+    }
 
     resetInviteCode({
       param: { workspaceId: initialValues.$id },
@@ -77,15 +74,18 @@ export const EditWorkspaceForm = ({ onCancel, initialValues }: EditWorkspaceForm
 
     if (!ok) {
       return;
-    };
+    }
 
-    deleteWorkspace({
-      param: { workspaceId: initialValues.$id },
-    }, {
-      onSuccess: () => {
-        window.location.href = "/";
+    deleteWorkspace(
+      {
+        param: { workspaceId: initialValues.$id },
       },
-    });
+      {
+        onSuccess: () => {
+          window.location.href = "/";
+        },
+      }
+    );
   };
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -98,7 +98,7 @@ export const EditWorkspaceForm = ({ onCancel, initialValues }: EditWorkspaceForm
     },
   });
 
-  const onSubmit = ( values: z.infer<typeof updateWorkspaceSchema>) => {
+  const onSubmit = (values: z.infer<typeof updateWorkspaceSchema>) => {
     const finalValues = {
       ...values,
       image: values.image instanceof File ? values.image : "",
@@ -106,7 +106,7 @@ export const EditWorkspaceForm = ({ onCancel, initialValues }: EditWorkspaceForm
 
     mutate({
       form: finalValues,
-      param: { workspaceId: initialValues.$id }
+      param: { workspaceId: initialValues.$id },
     });
   };
 
@@ -121,7 +121,8 @@ export const EditWorkspaceForm = ({ onCancel, initialValues }: EditWorkspaceForm
   const fullInviteLink = `${window.location.origin}/workspaces/${initialValues.$id}/join/${initialValues.inviteCode}`;
 
   const handleCopyInviteLink = () => {
-    navigator.clipboard.writeText(fullInviteLink)
+    navigator.clipboard
+      .writeText(fullInviteLink)
       .then(() => toast.success("Invite link copied"));
   };
 
@@ -131,7 +132,15 @@ export const EditWorkspaceForm = ({ onCancel, initialValues }: EditWorkspaceForm
       <DeleteDialog />
       <Card className="w-full h-full border-none shadow-none">
         <CardHeader className="flex flex-row items-center gap-x-4 p-7 space-y-0">
-          <Button size="sm" variant="secondary" onClick={onCancel ? onCancel : () => router.push(`/workspaces/${initialValues.$id}`)} >
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={
+              onCancel
+                ? onCancel
+                : () => router.push(`/workspaces/${initialValues.$id}`)
+            }
+          >
             <ArrowLeftIcon className="size-4 mr-2" />
             Back
           </Button>
@@ -151,14 +160,9 @@ export const EditWorkspaceForm = ({ onCancel, initialValues }: EditWorkspaceForm
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>
-                        Workspace Name
-                      </FormLabel>
+                      <FormLabel>Workspace Name</FormLabel>
                       <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="Enter workspace name"
-                        />
+                        <Input {...field} placeholder="Enter workspace name" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -203,7 +207,7 @@ export const EditWorkspaceForm = ({ onCancel, initialValues }: EditWorkspaceForm
                             onChange={handleImageChange}
                             disabled={isPending}
                           />
-                          { field.value ? (
+                          {field.value ? (
                             <Button
                               type="button"
                               variant="destructive"
@@ -212,7 +216,7 @@ export const EditWorkspaceForm = ({ onCancel, initialValues }: EditWorkspaceForm
                               className="w-fit mt-2"
                               onClick={() => {
                                 field.onChange(null);
-                                if(inputRef.current) {
+                                if (inputRef.current) {
                                   inputRef.current.value = "";
                                 }
                               }}
@@ -237,26 +241,22 @@ export const EditWorkspaceForm = ({ onCancel, initialValues }: EditWorkspaceForm
                   )}
                 />
               </div>
-                <DottedSeparator className="py-7" />
-                <div className="flex items-center justify-between">
-                  <Button
-                    type="button"
-                    size="lg"
-                    variant="secondary"
-                    onClick={onCancel}
-                    disabled={isPending}
-                    className={cn(!onCancel && "invisible")}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    size="lg"
-                    disabled={isPending}
-                  >
-                    Save Changes
-                  </Button>
-                </div>
+              <DottedSeparator className="py-7" />
+              <div className="flex items-center justify-between">
+                <Button
+                  type="button"
+                  size="lg"
+                  variant="secondary"
+                  onClick={onCancel}
+                  disabled={isPending}
+                  className={cn(!onCancel && "invisible")}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" size="lg" disabled={isPending}>
+                  Save Changes
+                </Button>
+              </div>
             </form>
           </Form>
         </CardContent>
@@ -299,7 +299,8 @@ export const EditWorkspaceForm = ({ onCancel, initialValues }: EditWorkspaceForm
           <div className="flex flex-col">
             <h3 className="font-bold">Danger Zone</h3>
             <p className="text-sm text-muted-foreground">
-              Deleting a workspace is irreversible and will remove all associated data.
+              Deleting a workspace is irreversible and will remove all
+              associated data.
             </p>
             <DottedSeparator className="py-7" />
             <Button
@@ -316,5 +317,5 @@ export const EditWorkspaceForm = ({ onCancel, initialValues }: EditWorkspaceForm
         </CardContent>
       </Card>
     </div>
-  )
-}
+  );
+};
