@@ -32,7 +32,18 @@ export const TaskViewSwitcher = ({
   hideProjectFilter,
   memberId,
 }: TaskViewSwitcherProps) => {
-  const [{ projectId, status, assigneeId, search, dueDate }] = useTaskFilters();
+  const [
+    {
+      projectId,
+      status,
+      priority,
+      assigneeId,
+      search,
+      startDate,
+      dueDate,
+      progress,
+    },
+  ] = useTaskFilters();
   const [view, setView] = useQueryState("task-view", {
     defaultValue: "table",
   });
@@ -47,9 +58,12 @@ export const TaskViewSwitcher = ({
     workspaceId,
     projectId: paramProjectId || projectId,
     status,
+    priority,
     assigneeId,
     search,
+    startDate,
     dueDate,
+    progress,
   });
 
   const onKanbanChange = useCallback(

@@ -26,20 +26,19 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from "@/components/ui/select";
 
 import { createTaskSchema } from "../schemas";
 import { useUpdateTask } from "../api/use-update-task";
 import { Task, TaskStatus } from "../types";
 
-
 interface EditTaskFormProps {
   onCancel?: () => void;
-  projectOptions: { id: string; name: string, imageUrl: string }[];
+  projectOptions: { id: string; name: string; imageUrl: string }[];
   memberOptions: { id: string; name: string }[];
   initialValues: Task;
-};
+}
 
 export const EditTaskForm = ({
   onCancel,
@@ -50,28 +49,33 @@ export const EditTaskForm = ({
   const { mutate, isPending } = useUpdateTask();
 
   const form = useForm<z.infer<typeof createTaskSchema>>({
-    resolver: zodResolver(createTaskSchema.omit({ workspaceId: true, description: true })),
+    resolver: zodResolver(
+      createTaskSchema.omit({ workspaceId: true, description: true })
+    ),
     defaultValues: {
       ...initialValues,
-      dueDate: initialValues.dueDate ? new Date(initialValues.dueDate) : undefined,
+      dueDate: initialValues.dueDate
+        ? new Date(initialValues.dueDate)
+        : undefined,
     },
   });
 
-  const onSubmit = ( values: z.infer<typeof createTaskSchema>) => {
-    mutate({ json: values, param: { taskId: initialValues.$id } }, {
-      onSuccess: () => {
-        form.reset();
-        onCancel?.();
+  const onSubmit = (values: z.infer<typeof createTaskSchema>) => {
+    mutate(
+      { json: values, param: { taskId: initialValues.$id } },
+      {
+        onSuccess: () => {
+          form.reset();
+          onCancel?.();
+        },
       }
-    });
+    );
   };
 
   return (
     <Card className="w-full h-full border-none shadow-none">
       <CardHeader className="flex p-7">
-        <CardTitle className="text-xl font-bold">
-          Edit a new task
-        </CardTitle>
+        <CardTitle className="text-xl font-bold">Edit a new task</CardTitle>
       </CardHeader>
       <div className="px-7">
         <DottedSeparator />
@@ -80,14 +84,12 @@ export const EditTaskForm = ({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <div className="flex flex-col gap-y-4">
-            <FormField
+              <FormField
                 control={form.control}
                 name="projectId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      Project
-                    </FormLabel>
+                    <FormLabel>Project</FormLabel>
                     <Select
                       defaultValue={field.value}
                       onValueChange={field.onChange}
@@ -121,14 +123,22 @@ export const EditTaskForm = ({
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      Task Name
-                    </FormLabel>
+                    <FormLabel>Task Name</FormLabel>
                     <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="Enter task name"
-                      />
+                      <Input {...field} placeholder="Enter task name" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="startDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Start Date</FormLabel>
+                    <FormControl>
+                      <DatePicker {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -139,9 +149,7 @@ export const EditTaskForm = ({
                 name="dueDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      Due Date
-                    </FormLabel>
+                    <FormLabel>Due Date</FormLabel>
                     <FormControl>
                       <DatePicker {...field} />
                     </FormControl>
@@ -154,9 +162,7 @@ export const EditTaskForm = ({
                 name="assigneeId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      Assignee
-                    </FormLabel>
+                    <FormLabel>Assignee</FormLabel>
                     <Select
                       defaultValue={field.value}
                       onValueChange={field.onChange}
@@ -189,9 +195,7 @@ export const EditTaskForm = ({
                 name="status"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      Status
-                    </FormLabel>
+                    <FormLabel>Status</FormLabel>
                     <Select
                       defaultValue={field.value}
                       onValueChange={field.onChange}
@@ -206,47 +210,71 @@ export const EditTaskForm = ({
                         <SelectItem value={TaskStatus.BACKLOG}>
                           Backlog
                         </SelectItem>
-                        <SelectItem value={TaskStatus.TODO}>
-                          To do
-                        </SelectItem>
+                        <SelectItem value={TaskStatus.TODO}>To do</SelectItem>
                         <SelectItem value={TaskStatus.IN_PROGRESS}>
                           In Progress
                         </SelectItem>
                         <SelectItem value={TaskStatus.IN_REVIEW}>
                           In Review
                         </SelectItem>
-                        <SelectItem value={TaskStatus.DONE}>
-                          Done
-                        </SelectItem>
+                        <SelectItem value={TaskStatus.DONE}>Done</SelectItem>
                       </SelectContent>
                     </Select>
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="progress"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Progress</FormLabel>
+                    <FormControl>
+                      <Select
+                        defaultValue={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select progress" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 11 }, (_, i) => i * 10).map(
+                            (progress) => (
+                              <SelectItem
+                                key={progress}
+                                value={String(progress)}
+                              >
+                                {progress}%
+                              </SelectItem>
+                            )
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
-              <DottedSeparator className="py-7" />
-              <div className="flex items-center justify-between">
-                <Button
-                  type="button"
-                  size="lg"
-                  variant="secondary"
-                  onClick={onCancel}
-                  disabled={isPending}
-                  className={cn(!onCancel && "invisible")}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  size="lg"
-                  disabled={isPending}
-                >
-                  Edit Task
-                </Button>
-              </div>
+            <DottedSeparator className="py-7" />
+            <div className="flex items-center justify-between">
+              <Button
+                type="button"
+                size="lg"
+                variant="secondary"
+                onClick={onCancel}
+                disabled={isPending}
+                className={cn(!onCancel && "invisible")}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" size="lg" disabled={isPending}>
+                Edit Task
+              </Button>
+            </div>
           </form>
         </Form>
       </CardContent>
     </Card>
-  )
-}
+  );
+};
