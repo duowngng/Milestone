@@ -9,7 +9,7 @@ import { useTaskId } from "@/features/tasks/hooks/use-task-id";
 import { TaskBreadcrumbs } from "@/features/tasks/components/task-breadcrumbs";
 import { TaskOverview } from "@/features/tasks/components/task-overview";
 import { TaskDescription } from "@/features/tasks/components/task-description";
-
+import { HistoryList } from "@/features/histories/components/history-list";
 
 export const TaskIdClient = () => {
   const taskId = useTaskId();
@@ -30,6 +30,8 @@ export const TaskIdClient = () => {
         <TaskOverview task={data} />
         <TaskDescription task={data} />
       </div>
+      <DottedSeparator className="my-6" />
+      <HistoryList taskId={taskId} />
     </div>
   );
 };

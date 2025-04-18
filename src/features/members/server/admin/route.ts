@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { ID, Query } from "node-appwrite";
@@ -15,92 +16,106 @@ import {
 import { AdminMember, Member, MemberRole } from "../../types";
 
 const app = new Hono()
-  .get("/", sessionMiddleware, adminMiddleware, async (c) => {
-    const { users } = await createAdminClient();
-    const databases = c.get("databases");
+  .get(
+    "/",
+    sessionMiddleware,
+    adminMiddleware,
+    zValidator(
+      "query",
+      z.object({
+        userId: z.string().optional(),
+        workspaceId: z.string().optional(),
+        role: z.nativeEnum(MemberRole).optional(),
+        createdAt: z.string().optional(),
+        updatedAt: z.string().optional(),
+      })
+    ),
+    async (c) => {
+      const { users } = await createAdminClient();
+      const databases = c.get("databases");
 
-    const userId = c.req.query("userId");
-    const workspaceId = c.req.query("workspaceId");
-    const role = c.req.query("role");
-    const createdAt = c.req.query("createdAt");
-    const updatedAt = c.req.query("updatedAt");
+      const { userId, workspaceId, role, createdAt, updatedAt } =
+        c.req.valid("query");
 
-    const queries = [Query.orderDesc("$createdAt")];
+      const queries = [Query.orderDesc("$createdAt")];
 
-    if (userId) queries.push(Query.equal("userId", userId));
+      if (userId) queries.push(Query.equal("userId", userId));
 
-    if (workspaceId) queries.push(Query.equal("workspaceId", workspaceId));
+      if (workspaceId) queries.push(Query.equal("workspaceId", workspaceId));
 
-    if (role) queries.push(Query.equal("role", role));
+      if (role) queries.push(Query.equal("role", role));
 
-    if (createdAt) {
-      try {
-        const [from, to] = decodeURIComponent(createdAt).split(",");
-        if (from) queries.push(Query.greaterThanEqual("$createdAt", from));
-        if (to) queries.push(Query.lessThanEqual("$createdAt", to));
-      } catch (error) {
-        console.error("Invalid createdAt format", error);
+      if (createdAt) {
+        try {
+          const [from, to] = decodeURIComponent(createdAt).split(",");
+          if (from) queries.push(Query.greaterThanEqual("$createdAt", from));
+          if (to) queries.push(Query.lessThanEqual("$createdAt", to));
+        } catch (error) {
+          console.error("Invalid createdAt format", error);
+        }
       }
-    }
 
-    if (updatedAt) {
-      try {
-        const [from, to] = decodeURIComponent(updatedAt).split(",");
-        if (from) queries.push(Query.greaterThanEqual("$updatedAt", from));
-        if (to) queries.push(Query.lessThanEqual("$updatedAt", to));
-      } catch (error) {
-        console.error("Invalid updatedAt format", error);
+      if (updatedAt) {
+        try {
+          const [from, to] = decodeURIComponent(updatedAt).split(",");
+          if (from) queries.push(Query.greaterThanEqual("$updatedAt", from));
+          if (to) queries.push(Query.lessThanEqual("$updatedAt", to));
+        } catch (error) {
+          console.error("Invalid updatedAt format", error);
+        }
       }
+
+      const members = await databases.listDocuments(
+        DATABASE_ID,
+        MEMBERS_ID,
+        queries
+      );
+
+      const userIds = Array.from(
+        new Set(members.documents.map((m) => m.userId))
+      );
+      const workspaceIds = Array.from(
+        new Set(members.documents.map((m) => m.workspaceId))
+      );
+
+      const usersList = await users.list([Query.equal("$id", userIds)]);
+      const workspaces = await databases.listDocuments(
+        DATABASE_ID,
+        WORKSPACES_ID,
+        [Query.equal("$id", workspaceIds)]
+      );
+
+      const userMap = Object.fromEntries(
+        usersList.users.map((user) => [
+          user.$id,
+          { name: user.name, email: user.email },
+        ])
+      );
+
+      const workspaceMap = Object.fromEntries(
+        workspaces.documents.map((workspace) => [
+          workspace.$id,
+          { name: workspace.name },
+        ])
+      );
+
+      const populatedMembers = members.documents.map(
+        (member) =>
+          ({
+            ...member,
+            user: userMap[member.userId],
+            workspace: workspaceMap[member.workspaceId],
+          } as AdminMember)
+      );
+
+      return c.json({
+        data: {
+          total: members.total,
+          documents: populatedMembers,
+        },
+      });
     }
-
-    const members = await databases.listDocuments(
-      DATABASE_ID,
-      MEMBERS_ID,
-      queries
-    );
-
-    const userIds = Array.from(new Set(members.documents.map((m) => m.userId)));
-    const workspaceIds = Array.from(
-      new Set(members.documents.map((m) => m.workspaceId))
-    );
-
-    const usersList = await users.list([Query.equal("$id", userIds)]);
-    const workspaces = await databases.listDocuments(
-      DATABASE_ID,
-      WORKSPACES_ID,
-      [Query.equal("$id", workspaceIds)]
-    );
-
-    const userMap = Object.fromEntries(
-      usersList.users.map((user) => [
-        user.$id,
-        { name: user.name, email: user.email },
-      ])
-    );
-
-    const workspaceMap = Object.fromEntries(
-      workspaces.documents.map((workspace) => [
-        workspace.$id,
-        { name: workspace.name },
-      ])
-    );
-
-    const populatedMembers = members.documents.map(
-      (member) =>
-        ({
-          ...member,
-          user: userMap[member.userId],
-          workspace: workspaceMap[member.workspaceId],
-        } as AdminMember)
-    );
-
-    return c.json({
-      data: {
-        total: members.total,
-        documents: populatedMembers,
-      },
-    });
-  })
+  )
 
   .get("/:memberId", sessionMiddleware, adminMiddleware, async (c) => {
     const databases = c.get("databases");
