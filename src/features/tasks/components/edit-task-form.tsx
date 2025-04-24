@@ -54,9 +54,13 @@ export const EditTaskForm = ({
     ),
     defaultValues: {
       ...initialValues,
+      startDate: initialValues.startDate
+        ? new Date(initialValues.startDate)
+        : undefined,
       dueDate: initialValues.dueDate
         ? new Date(initialValues.dueDate)
         : undefined,
+      progress: String(initialValues.progress),
     },
   });
 
@@ -218,6 +222,32 @@ export const EditTaskForm = ({
                           In Review
                         </SelectItem>
                         <SelectItem value={TaskStatus.DONE}>Done</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="priority"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Priority</FormLabel>
+                    <Select
+                      defaultValue={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select priority" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <FormMessage />
+                      <SelectContent>
+                        <SelectItem value="LOW">Low</SelectItem>
+                        <SelectItem value="MEDIUM">Medium</SelectItem>
+                        <SelectItem value="HIGH">High</SelectItem>
+                        <SelectItem value="URGENT">Urgent</SelectItem>
                       </SelectContent>
                     </Select>
                   </FormItem>

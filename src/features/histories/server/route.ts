@@ -1,4 +1,3 @@
-import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { ID, Query } from "node-appwrite";
@@ -7,7 +6,13 @@ import { createAdminClient } from "@/lib/appwrite";
 import { getMember } from "@/features/members/utils";
 import { Task } from "@/features/tasks/types";
 
-import { DATABASE_ID, MEMBERS_ID, TASKS_ID, HISTORIES_ID } from "@/config";
+import {
+  DATABASE_ID,
+  MEMBERS_ID,
+  TASKS_ID,
+  HISTORIES_ID,
+  PROJECTS_ID,
+} from "@/config";
 import { sessionMiddleware } from "@/lib/session-middleware";
 
 import { createHistorySchema } from "../schemas";
@@ -52,16 +57,58 @@ const app = new Hono()
 
         const user = await users.get(member.userId);
 
-        return {
+        const oldValues = JSON.parse(history.oldValues);
+        const newValues = JSON.parse(history.newValues);
+
+        const response = {
           ...history,
-          oldValues: JSON.parse(history.oldValues),
-          newValues: JSON.parse(history.newValues),
+          oldValues,
+          newValues,
           editor: {
             ...member,
             name: user.name || user.email,
             email: user.email,
           },
         };
+
+        if (newValues.projectId) {
+          const newProject = await databases.getDocument(
+            DATABASE_ID,
+            PROJECTS_ID,
+            newValues.projectId
+          );
+
+          const oldProject = await databases.getDocument(
+            DATABASE_ID,
+            PROJECTS_ID,
+            oldValues.projectId
+          );
+
+          response.newValues.project = newProject.name;
+          response.oldValues.project = oldProject.name;
+        }
+
+        if (newValues.assigneeId) {
+          const newAssignee = await databases.getDocument(
+            DATABASE_ID,
+            MEMBERS_ID,
+            newValues.assigneeId
+          );
+
+          const oldAssignee = await databases.getDocument(
+            DATABASE_ID,
+            MEMBERS_ID,
+            oldValues.assigneeId
+          );
+
+          const newUser = await users.get(newAssignee.userId);
+          const oldUser = await users.get(oldAssignee.userId);
+
+          response.newValues.assignee = newUser.name || newUser.email;
+          response.oldValues.assignee = oldUser.name || oldUser.email;
+        }
+
+        return response;
       })
     );
 
@@ -78,8 +125,7 @@ const app = new Hono()
       const databases = c.get("databases");
       const user = c.get("user");
 
-      const { taskId, editorId, fields, oldValues, newValues } =
-        c.req.valid("json");
+      const { taskId, fields, oldValues, newValues } = c.req.valid("json");
 
       const task = await databases.getDocument<Task>(
         DATABASE_ID,
@@ -103,7 +149,7 @@ const app = new Hono()
         ID.unique(),
         {
           taskId,
-          editorId,
+          editorId: member.$id,
           fields,
           oldValues: JSON.stringify(oldValues),
           newValues: JSON.stringify(newValues),

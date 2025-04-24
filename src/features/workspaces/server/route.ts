@@ -10,6 +10,7 @@ import {
   MEMBERS_ID,
   IMAGES_BUCKET_ID,
   TASKS_ID,
+  PROJECTS_ID,
 } from "@/config";
 import { sessionMiddleware } from "@/lib/session-middleware";
 
@@ -212,6 +213,22 @@ const app = new Hono()
 
     if (!member || member.role !== MemberRole.ADMIN) {
       return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const tasks = await databases.listDocuments(DATABASE_ID, TASKS_ID, [
+      Query.equal("workspaceId", workspaceId),
+    ]);
+
+    for (const task of tasks.documents) {
+      await databases.deleteDocument(DATABASE_ID, TASKS_ID, task.$id);
+    }
+
+    const projects = await databases.listDocuments(DATABASE_ID, PROJECTS_ID, [
+      Query.equal("workspaceId", workspaceId),
+    ]);
+
+    for (const project of projects.documents) {
+      await databases.deleteDocument(DATABASE_ID, PROJECTS_ID, project.$id);
     }
 
     await databases.deleteDocument(DATABASE_ID, WORKSPACES_ID, workspaceId);

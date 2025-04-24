@@ -22,22 +22,29 @@ export const HistoryList: React.FC<HistoryListProps> = ({ taskId }) => {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="bg-muted rounded-lg p-4">
-        <p className="text-lg font-semibold">History</p>
-        <DottedSeparator className="my-4" />
-        {histories.map((history) => (
-          <HistoryItem
-            key={history.$id}
-            fields={history.fields}
-            oldValues={history.oldValues}
-            newValues={history.newValues}
-            editorName={history.editor.name}
-            editorEmail={history.editor.email}
-            createdAt={history.$createdAt}
-          />
-        ))}
+    <>
+      <DottedSeparator className="my-6" />
+      <div className="space-y-4">
+        <div className="bg-muted rounded-lg p-4">
+          <p className="text-lg font-semibold">History</p>
+          <DottedSeparator className="my-4" />
+          {histories.map((history, index) => (
+            <React.Fragment key={history.$id}>
+              <HistoryItem
+                fields={history.fields}
+                oldValues={history.oldValues}
+                newValues={history.newValues}
+                editorName={history.editor.name}
+                editorEmail={history.editor.email}
+                createdAt={history.$createdAt}
+              />
+              {index < histories.length - 1 && (
+                <DottedSeparator className="my-4" />
+              )}
+            </React.Fragment>
+          ))}
+        </div>
       </div>
-    </div>
+    </>
   );
 };

@@ -56,8 +56,13 @@ export const CreateTaskForm = ({
     resolver: zodResolver(createTaskSchema.omit({ workspaceId: true })),
     defaultValues: {
       workspaceId,
-      status: initialStatus,
-      projectId: initialProjectId,
+      status: initialStatus || TaskStatus.BACKLOG,
+      projectId: initialProjectId || "",
+      name: "",
+      startDate: undefined,
+      dueDate: undefined,
+      assigneeId: "",
+      progress: "0",
     },
   });
 
@@ -219,6 +224,32 @@ export const CreateTaskForm = ({
                           In Review
                         </SelectItem>
                         <SelectItem value={TaskStatus.DONE}>Done</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="priority"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Priority</FormLabel>
+                    <Select
+                      defaultValue={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select priority" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <FormMessage />
+                      <SelectContent>
+                        <SelectItem value="LOW">Low</SelectItem>
+                        <SelectItem value="MEDIUM">Medium</SelectItem>
+                        <SelectItem value="HIGH">High</SelectItem>
+                        <SelectItem value="URGENT">Urgent</SelectItem>
                       </SelectContent>
                     </Select>
                   </FormItem>

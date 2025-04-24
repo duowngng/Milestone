@@ -3,11 +3,18 @@ import { Hono } from "hono";
 import { ID, Query } from "node-appwrite";
 import { zValidator } from "@hono/zod-validator";
 import { createAdminClient } from "@/lib/appwrite";
+import { isEqual } from "date-fns";
 
 import { getMember } from "@/features/members/utils";
 import { Project } from "@/features/projects/types";
 
-import { DATABASE_ID, MEMBERS_ID, PROJECTS_ID, TASKS_ID } from "@/config";
+import {
+  DATABASE_ID,
+  HISTORIES_ID,
+  MEMBERS_ID,
+  PROJECTS_ID,
+  TASKS_ID,
+} from "@/config";
 import { sessionMiddleware } from "@/lib/session-middleware";
 
 import { createTaskSchema } from "../schemas";
@@ -218,8 +225,11 @@ const app = new Hono()
         status,
         workspaceId,
         projectId,
+        startDate,
         dueDate,
         assigneeId,
+        progress,
+        priority,
         description,
       } = c.req.valid("json");
 
@@ -258,8 +268,11 @@ const app = new Hono()
           status,
           workspaceId,
           projectId,
+          startDate,
           dueDate,
           assigneeId,
+          progress: parseInt(progress),
+          priority,
           position: newPosition,
           description,
         }
@@ -275,8 +288,17 @@ const app = new Hono()
     async (c) => {
       const user = c.get("user");
       const databases = c.get("databases");
-      const { name, status, projectId, dueDate, assigneeId, description } =
-        c.req.valid("json");
+      const {
+        name,
+        status,
+        projectId,
+        startDate,
+        dueDate,
+        assigneeId,
+        description,
+        priority,
+        progress,
+      } = c.req.valid("json");
       const { taskId } = c.req.param();
 
       const existingTask = await databases.getDocument<Task>(
@@ -295,6 +317,78 @@ const app = new Hono()
         return c.json({ error: "Unauthorized" }, 401);
       }
 
+      const changedFields: string[] = [];
+      const oldValues: Partial<Task> = {};
+      const newValues: Partial<Task> = {};
+
+      if (name !== undefined && name !== existingTask.name) {
+        changedFields.push("name");
+        oldValues["name"] = existingTask.name;
+        newValues["name"] = name;
+      }
+
+      if (status !== undefined && status !== existingTask.status) {
+        changedFields.push("status");
+        oldValues["status"] = existingTask.status;
+        newValues["status"] = status;
+      }
+
+      if (projectId !== undefined && projectId !== existingTask.projectId) {
+        changedFields.push("projectId");
+        oldValues["projectId"] = existingTask.projectId;
+        newValues["projectId"] = projectId;
+      }
+
+      if (startDate !== undefined) {
+        const newDateValue = new Date(startDate);
+        const existingDateValue = new Date(existingTask.startDate);
+
+        if (!isEqual(newDateValue, existingDateValue)) {
+          changedFields.push("startDate");
+          oldValues["startDate"] = existingTask.startDate;
+          newValues["startDate"] = startDate.toISOString();
+        }
+      }
+
+      if (dueDate !== undefined) {
+        const newDateValue = new Date(dueDate);
+        const existingDateValue = new Date(existingTask.dueDate);
+
+        if (!isEqual(newDateValue, existingDateValue)) {
+          changedFields.push("dueDate");
+          oldValues["dueDate"] = existingTask.dueDate;
+          newValues["dueDate"] = dueDate.toISOString();
+        }
+      }
+
+      if (assigneeId !== undefined && assigneeId !== existingTask.assigneeId) {
+        changedFields.push("assigneeId");
+        oldValues["assigneeId"] = existingTask.assigneeId;
+        newValues["assigneeId"] = assigneeId;
+      }
+
+      if (
+        description !== undefined &&
+        description !== existingTask.description
+      ) {
+        changedFields.push("description");
+      }
+
+      if (priority !== undefined && priority !== existingTask.priority) {
+        changedFields.push("priority");
+        oldValues["priority"] = existingTask.priority;
+        newValues["priority"] = priority;
+      }
+
+      if (
+        progress !== undefined &&
+        String(progress) !== String(existingTask.progress)
+      ) {
+        changedFields.push("progress");
+        oldValues["progress"] = existingTask.progress;
+        newValues["progress"] = parseInt(progress);
+      }
+
       const task = await databases.updateDocument(
         DATABASE_ID,
         TASKS_ID,
@@ -303,11 +397,24 @@ const app = new Hono()
           name,
           status,
           projectId,
+          startDate,
           dueDate,
           assigneeId,
+          progress: progress ? parseInt(progress) : undefined,
+          priority,
           description,
         }
       );
+
+      if (changedFields.length > 0) {
+        await databases.createDocument(DATABASE_ID, HISTORIES_ID, ID.unique(), {
+          taskId,
+          editorId: member.$id,
+          fields: changedFields,
+          oldValues: JSON.stringify(oldValues),
+          newValues: JSON.stringify(newValues),
+        });
+      }
 
       return c.json({ data: task });
     }

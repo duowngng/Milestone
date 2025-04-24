@@ -30,7 +30,6 @@ export const TaskIdClient = () => {
         <TaskOverview task={data} />
         <TaskDescription task={data} />
       </div>
-      <DottedSeparator className="my-6" />
       <HistoryList taskId={taskId} />
     </div>
   );

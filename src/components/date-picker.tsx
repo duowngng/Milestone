@@ -39,7 +39,7 @@ export const DatePicker = ({
           )}
         >
           <CalendarIcon className="size-4 mr-2" />
-          {value ? format(value, "PP") : <span>{placeholder}</span>}
+          {value ? format(value, "PP") : placeholder}
         </Button>
       </PopoverTrigger>
       <PopoverContent>

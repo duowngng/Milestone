@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { format, differenceInMinutes, differenceInHours } from "date-fns";
+import { enGB } from "date-fns/locale";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -44,6 +45,6 @@ export function formatRelativeTime(dateString: string) {
   } else if (hours < 24) {
     return `${hours} ${hours === 1 ? "hour" : "hours"} ago`;
   } else {
-    return format(date, "Pp");
+    return format(date, "Pp", { locale: enGB });
   }
 }
