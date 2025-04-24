@@ -18,6 +18,8 @@ import { EventCard } from "./event-card";
 
 import { Task } from "../../types";
 
+import { splitTask, Event } from "./splitTask";
+
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "./data-calendar.css";
 
@@ -35,12 +37,12 @@ const localizer = dateFnsLocalizer({
 
 interface DataCalendarProps {
   data: Task[];
-};
+}
 
 interface CustomToolbarProps {
   date: Date;
   onNavigate: (action: "PREV" | "NEXT" | "TODAY") => void;
-};
+}
 
 const CustomToolbar = ({ date, onNavigate }: CustomToolbarProps) => {
   return (
@@ -64,25 +66,15 @@ const CustomToolbar = ({ date, onNavigate }: CustomToolbarProps) => {
         <ChevronRightIcon className="size-4" />
       </Button>
     </div>
-  )
-}
+  );
+};
 
-export const DataCalendar = ({
-  data,
-}: DataCalendarProps) => {
+export const DataCalendar = ({ data }: DataCalendarProps) => {
   const [value, setValue] = useState(
     data.length > 0 ? new Date(data[0].dueDate) : new Date()
   );
 
-  const events = data.map((task) => ({
-    start: new Date(task.dueDate),
-    end: new Date(task.dueDate),
-    title: task.name,
-    project: task.project,
-    assignee: task.assignee,
-    status: task.status,
-    id: task.$id,
-  }));
+  const events: Event[] = data.flatMap((task) => splitTask(task));
 
   const handleNavigate = (action: "PREV" | "NEXT" | "TODAY") => {
     if (action === "PREV") {
@@ -106,7 +98,8 @@ export const DataCalendar = ({
       className="h-full"
       max={new Date(new Date().setFullYear(new Date().getFullYear() + 1))}
       formats={{
-        weekdayFormat: (date, culture, localizer) => localizer?.format(date, "EEE", culture) ?? "",
+        weekdayFormat: (date, culture, localizer) =>
+          localizer?.format(date, "EEE", culture) ?? "",
       }}
       components={{
         eventWrapper: ({ event }) => (
@@ -116,12 +109,14 @@ export const DataCalendar = ({
             assignee={event.assignee}
             project={event.project}
             status={event.status}
+            progress={event.progress}
+            displayMode={event.displayMode}
           />
         ),
         toolbar: () => (
           <CustomToolbar date={value} onNavigate={handleNavigate} />
-        )
+        ),
       }}
     />
   );
-}
+};

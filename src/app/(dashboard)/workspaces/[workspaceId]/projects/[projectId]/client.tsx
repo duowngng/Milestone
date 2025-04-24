@@ -16,8 +16,11 @@ import { PageError } from "@/components/page-error";
 
 export const ProjectIdClient = () => {
   const projectId = useProjectId();
-  const { data: project, isLoading: isLoadingProject } = useGetProject({ projectId });
-  const { data: analytics, isLoading: isLoadingAnalytics } = useGetProjectAnalytics({ projectId });
+  const { data: project, isLoading: isLoadingProject } = useGetProject({
+    projectId,
+  });
+  const { data: analytics, isLoading: isLoadingAnalytics } =
+    useGetProjectAnalytics({ projectId });
 
   const isLoading = isLoadingProject || isLoadingAnalytics;
 
@@ -28,8 +31,6 @@ export const ProjectIdClient = () => {
   if (!project) {
     return <PageError message="Project not found" />;
   }
-
-  console.log(analytics);
 
   return (
     <div className="flex flex-col gap-y-4">
@@ -44,17 +45,17 @@ export const ProjectIdClient = () => {
         </div>
         <div>
           <Button variant="secondary" size="sm" asChild>
-            <Link href={`/workspaces/${project.workspaceId}/projects/${project.$id}/settings`}>
+            <Link
+              href={`/workspaces/${project.workspaceId}/projects/${project.$id}/settings`}
+            >
               <PencilIcon className="size-4 mr-2" />
               Edit Project
             </Link>
           </Button>
         </div>
       </div>
-      {analytics ? (
-        <Analytics data={analytics} />
-      ) : null}
+      {analytics ? <Analytics data={analytics} /> : null}
       <TaskViewSwitcher hideProjectFilter />
     </div>
-  )
+  );
 };

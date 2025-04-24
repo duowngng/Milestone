@@ -68,11 +68,11 @@ export const DataFilter = () => {
           <SelectTrigger className="w-full lg:w-auto h-8">
             <div className="flex items-center pr-2">
               <UserIcon className="size-4 mr-2" />
-              <SelectValue placeholder="All users" />
+              <SelectValue placeholder="User" />
             </div>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All users</SelectItem>
+            <SelectItem value="all">User</SelectItem>
             <SelectSeparator />
             {userOptions?.map((user) => (
               <SelectItem key={user.value} value={user.value}>

@@ -51,11 +51,11 @@ export function DateRangePicker({
           {internalRange?.from ? (
             internalRange.to ? (
               <>
-                {format(internalRange.from, "PPP")} -{" "}
-                {format(internalRange.to, "PPP")}
+                {format(internalRange.from, "PP")} -{" "}
+                {format(internalRange.to, "PP")}
               </>
             ) : (
-              format(internalRange.from, "PPP")
+              format(internalRange.from, "PP")
             )
           ) : (
             <span>{placeholder}</span>

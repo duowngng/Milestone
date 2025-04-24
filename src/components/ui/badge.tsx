@@ -1,8 +1,8 @@
-import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
-import { TaskStatus } from "@/features/tasks/types"
+import * as React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
+import { TaskStatus, TaskPriority } from "@/features/tasks/types";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 const badgeVariants = cva(
   "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
@@ -26,13 +26,21 @@ const badgeVariants = cva(
           "border-transparent bg-emerald-400 text-primary hover:bg-emerald-400/80",
         [TaskStatus.BACKLOG]:
           "border-transparent bg-pink-400 text-primary hover:bg-pink-400/80",
+        [TaskPriority.LOW]:
+          "border-transparent bg-blue-50 text-primary hover:bg-blue-50/80",
+        [TaskPriority.MEDIUM]:
+          "border-transparent bg-blue-200 text-primary hover:bg-blue-200/80",
+        [TaskPriority.HIGH]:
+          "border-transparent bg-blue-400 text-primary hover:bg-blue-400/80",
+        [TaskPriority.URGENT]:
+          "border-transparent bg-red-400 text-primary hover:bg-red-400/80",
       },
     },
     defaultVariants: {
       variant: "default",
     },
   }
-)
+);
 
 export interface BadgeProps
   extends React.HTMLAttributes<HTMLDivElement>,
@@ -41,7 +49,7 @@ export interface BadgeProps
 function Badge({ className, variant, ...props }: BadgeProps) {
   return (
     <div className={cn(badgeVariants({ variant }), className)} {...props} />
-  )
+  );
 }
 
-export { Badge, badgeVariants }
+export { Badge, badgeVariants };

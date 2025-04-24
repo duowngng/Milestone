@@ -73,11 +73,11 @@ export const DataFilter = () => {
         <SelectTrigger className="w-full lg:w-auto h-8">
           <div className="flex items-center pr-2">
             <UserIcon className="size-4 mr-2" />
-            <SelectValue placeholder="All Users" />
+            <SelectValue placeholder="User" />
           </div>
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All Users</SelectItem>
+          <SelectItem value="all">User</SelectItem>
           <SelectSeparator />
           {userOptions?.map((user) => (
             <SelectItem key={user.value} value={user.value}>
@@ -91,11 +91,11 @@ export const DataFilter = () => {
         <SelectTrigger className="w-full lg:w-auto h-8">
           <div className="flex items-center pr-2">
             <BuildingIcon className="size-4 mr-2" />
-            <SelectValue placeholder="All Workspaces" />
+            <SelectValue placeholder="Workspace" />
           </div>
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All Workspaces</SelectItem>
+          <SelectItem value="all">Workspace</SelectItem>
           <SelectSeparator />
           {workspaceOptions?.map((workspace) => (
             <SelectItem key={workspace.value} value={workspace.value}>
@@ -110,11 +110,11 @@ export const DataFilter = () => {
         <SelectTrigger className="w-full lg:w-auto h-8">
           <div className="flex items-center pr-2">
             <UserCogIcon className="size-4 mr-2" />
-            <SelectValue placeholder="All Roles" />
+            <SelectValue placeholder="Role" />
           </div>
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All Roles</SelectItem>
+          <SelectItem value="all">Role</SelectItem>
           <SelectSeparator />
           {roleOptions.map((role) => (
             <SelectItem key={role.value} value={role.value}>
