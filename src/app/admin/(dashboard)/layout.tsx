@@ -1,9 +1,9 @@
 import { CreateAdminWorkspaceModal } from "@/features/workspaces/components/admin/create-admin-workspace-modal";
-import { CreateAdminMemberModal } from "@/features/members/components/admin/create-admin-member-modal";
+import { CreateAdminMemberModal } from "@/features/members/workspace/components/admin/create-admin-member-modal";
 import { CreateAdminProjectModal } from "@/features/projects/components/admin/create-admin-project-modal";
 import { CreateTaskModal } from "@/features/tasks/components/create-task-modal";
 import { EditAdminWorkspaceModal } from "@/features/workspaces/components/admin/edit-admin-workspace-modal";
-import { EditAdminMemberModal } from "@/features/members/components/admin/edit-admin-member-modal";
+import { EditAdminMemberModal } from "@/features/members/workspace/components/admin/edit-admin-member-modal";
 import { EditAdminProjectModal } from "@/features/projects/components/admin/edit-admin-project-modal";
 import { EditTaskModal } from "@/features/tasks/components/edit-task-modal";
 

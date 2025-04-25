@@ -6,14 +6,18 @@ import { createAdminClient } from "@/lib/appwrite";
 
 import { adminMiddleware } from "@/lib/admin-middleware";
 import { sessionMiddleware } from "@/lib/session-middleware";
-import { DATABASE_ID, MEMBERS_ID, WORKSPACES_ID } from "@/config";
+import { DATABASE_ID, WORKSPACE_MEMBERS_ID, WORKSPACES_ID } from "@/config";
 
 import {
   adminCreateMemberSchema,
   adminUpdateMemberSchema,
-} from "../../schemas";
+} from "@/features/members/schemas";
 
-import { AdminMember, Member, MemberRole } from "../../types";
+import {
+  AdminWorkspaceMember,
+  WorkspaceMember,
+  MemberRole,
+} from "@/features/members/types";
 
 const app = new Hono()
   .get(
@@ -65,17 +69,17 @@ const app = new Hono()
         }
       }
 
-      const members = await databases.listDocuments(
+      const workspaceMembers = await databases.listDocuments(
         DATABASE_ID,
-        MEMBERS_ID,
+        WORKSPACE_MEMBERS_ID,
         queries
       );
 
       const userIds = Array.from(
-        new Set(members.documents.map((m) => m.userId))
+        new Set(workspaceMembers.documents.map((m) => m.userId))
       );
       const workspaceIds = Array.from(
-        new Set(members.documents.map((m) => m.workspaceId))
+        new Set(workspaceMembers.documents.map((m) => m.workspaceId))
       );
 
       const usersList = await users.list([Query.equal("$id", userIds)]);
@@ -99,18 +103,18 @@ const app = new Hono()
         ])
       );
 
-      const populatedMembers = members.documents.map(
+      const populatedMembers = workspaceMembers.documents.map(
         (member) =>
           ({
             ...member,
             user: userMap[member.userId],
             workspace: workspaceMap[member.workspaceId],
-          } as AdminMember)
+          } as AdminWorkspaceMember)
       );
 
       return c.json({
         data: {
-          total: members.total,
+          total: workspaceMembers.total,
           documents: populatedMembers,
         },
       });
@@ -121,9 +125,9 @@ const app = new Hono()
     const databases = c.get("databases");
     const { memberId } = c.req.param();
 
-    const member = await databases.getDocument<Member>(
+    const member = await databases.getDocument<WorkspaceMember>(
       DATABASE_ID,
-      MEMBERS_ID,
+      WORKSPACE_MEMBERS_ID,
       memberId
     );
 
@@ -141,7 +145,7 @@ const app = new Hono()
 
       const newMember = await databases.createDocument(
         DATABASE_ID,
-        MEMBERS_ID,
+        WORKSPACE_MEMBERS_ID,
         ID.unique(),
         {
           workspaceId,
@@ -168,14 +172,14 @@ const app = new Hono()
 
       const memberToUpdate = await databases.getDocument(
         DATABASE_ID,
-        MEMBERS_ID,
+        WORKSPACE_MEMBERS_ID,
         memberId
       );
 
-      if (role && role !== MemberRole.ADMIN) {
+      if (role && role !== MemberRole.MANAGER) {
         const allMembersInWorkspace = await databases.listDocuments(
           DATABASE_ID,
-          MEMBERS_ID,
+          WORKSPACE_MEMBERS_ID,
           [Query.equal("workspaceId", memberToUpdate.workspaceId)]
         );
 
@@ -186,7 +190,7 @@ const app = new Hono()
 
       const updatedMember = await databases.updateDocument(
         DATABASE_ID,
-        MEMBERS_ID,
+        WORKSPACE_MEMBERS_ID,
         memberId,
         {
           userId,
@@ -205,13 +209,13 @@ const app = new Hono()
 
     const memberToDelete = await databases.getDocument(
       DATABASE_ID,
-      MEMBERS_ID,
+      WORKSPACE_MEMBERS_ID,
       memberId
     );
 
     const allMembersInWorkspace = await databases.listDocuments(
       DATABASE_ID,
-      MEMBERS_ID,
+      WORKSPACE_MEMBERS_ID,
       [Query.equal("workspaceId", memberToDelete.workspaceId)]
     );
 
@@ -219,7 +223,7 @@ const app = new Hono()
       return c.json({ error: "Cannot delete the only member" }, 400);
     }
 
-    await databases.deleteDocument(DATABASE_ID, MEMBERS_ID, memberId);
+    await databases.deleteDocument(DATABASE_ID, WORKSPACE_MEMBERS_ID, memberId);
 
     return c.json({ data: { $id: memberToDelete.$id } });
   });

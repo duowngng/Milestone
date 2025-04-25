@@ -2,7 +2,7 @@
 
 import { ResponsiveModal } from "@/components/responsive-modal";
 import { CreateAdminMemberFormWrapper } from "./create-admin-member-form-wrapper";
-import { useCreateMemberModal } from "@/features/members/hooks/use-create-member-modal";
+import { useCreateMemberModal } from "@/features/members/workspace/hooks/use-create-member-modal";
 
 export const CreateAdminMemberModal = () => {
   const { isOpen, setIsOpen, close } = useCreateMemberModal();

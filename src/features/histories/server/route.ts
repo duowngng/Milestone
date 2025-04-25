@@ -3,12 +3,12 @@ import { Hono } from "hono";
 import { ID, Query } from "node-appwrite";
 import { createAdminClient } from "@/lib/appwrite";
 
-import { getMember } from "@/features/members/utils";
+import { getWorkspaceMember } from "@/features/members/workspace/utils";
 import { Task } from "@/features/tasks/types";
 
 import {
   DATABASE_ID,
-  MEMBERS_ID,
+  WORKSPACE_MEMBERS_ID,
   TASKS_ID,
   HISTORIES_ID,
   PROJECTS_ID,
@@ -31,7 +31,7 @@ const app = new Hono()
       taskId
     );
 
-    const currentMember = await getMember({
+    const currentMember = await getWorkspaceMember({
       databases,
       workspaceId: task.workspaceId,
       userId: currentUser.$id,
@@ -51,7 +51,7 @@ const app = new Hono()
       histories.documents.map(async (history) => {
         const member = await databases.getDocument(
           DATABASE_ID,
-          MEMBERS_ID,
+          WORKSPACE_MEMBERS_ID,
           history.editorId
         );
 
@@ -91,13 +91,13 @@ const app = new Hono()
         if (newValues.assigneeId) {
           const newAssignee = await databases.getDocument(
             DATABASE_ID,
-            MEMBERS_ID,
+            WORKSPACE_MEMBERS_ID,
             newValues.assigneeId
           );
 
           const oldAssignee = await databases.getDocument(
             DATABASE_ID,
-            MEMBERS_ID,
+            WORKSPACE_MEMBERS_ID,
             oldValues.assigneeId
           );
 
@@ -133,7 +133,7 @@ const app = new Hono()
         taskId
       );
 
-      const member = await getMember({
+      const member = await getWorkspaceMember({
         databases,
         workspaceId: task.workspaceId,
         userId: user.$id,

@@ -5,35 +5,36 @@ import { InferRequestType, InferResponseType } from "hono";
 import { client } from "@/lib/rpc";
 
 type ResponseType = InferResponseType<
-  (typeof client.api.members)[":memberId"]["$patch"],
+  (typeof client.api.members.workspace)[":memberId"]["$delete"],
   200
 >;
 type RequestType = InferRequestType<
-  (typeof client.api.members)[":memberId"]["$patch"]
+  (typeof client.api.members.workspace)[":memberId"]["$delete"]
 >;
 
-export const useUpdateMember = () => {
+export const useDeleteMember = () => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation<ResponseType, Error, RequestType>({
-    mutationFn: async ({ param, json }) => {
-      const response = await client.api.members[":memberId"]["$patch"]({
+    mutationFn: async ({ param }) => {
+      const response = await client.api.members.workspace[":memberId"][
+        "$delete"
+      ]({
         param,
-        json,
       });
 
       if (!response.ok) {
-        throw new Error("Failed to update member");
+        throw new Error("Failed to delete member");
       }
 
       return await response.json();
     },
     onSuccess: () => {
-      toast.success("Member updated");
+      toast.success("Member deleted");
       queryClient.invalidateQueries({ queryKey: ["members"] });
     },
     onError: () => {
-      toast.error("Failed to update member");
+      toast.error("Failed to delete member");
     },
   });
 

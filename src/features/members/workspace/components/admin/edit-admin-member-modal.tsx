@@ -2,7 +2,7 @@
 
 import { ResponsiveModal } from "@/components/responsive-modal";
 import { EditAdminMemberFormWrapper } from "./edit-admin-member-form-wrapper";
-import { useEditMemberModal } from "@/features/members/hooks/use-edit-member-modal";
+import { useEditMemberModal } from "@/features/members/workspace/hooks/use-edit-member-modal";
 
 export const EditAdminMemberModal = () => {
   const { close, memberId } = useEditMemberModal();

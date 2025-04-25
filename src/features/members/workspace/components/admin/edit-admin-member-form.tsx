@@ -23,14 +23,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { adminUpdateMemberSchema } from "../../schemas";
 import { useUpdateMember } from "../../api/admin/use-update-admin-member";
-import { Member } from "../../types";
+import { adminUpdateMemberSchema } from "@/features/members/schemas";
+import { WorkspaceMember } from "@/features/members/types";
 
 interface EditAdminMemberFormProps {
   users: { id: string; name: string }[];
   workspaces: { id: string; name: string }[];
-  initialValues: Member;
+  initialValues: WorkspaceMember;
   onCancel?: () => void;
 }
 
@@ -139,7 +139,7 @@ export const EditAdminMemberForm = ({
                           <SelectValue placeholder="Select a role" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="ADMIN">Admin</SelectItem>
+                          <SelectItem value="MANAGER">Manager</SelectItem>
                           <SelectItem value="MEMBER">Member</SelectItem>
                         </SelectContent>
                       </Select>

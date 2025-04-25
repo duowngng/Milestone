@@ -3,7 +3,7 @@ import { Loader } from "lucide-react";
 
 import { useGetUsers } from "@/features/users/api/admin/use-get-admin-users";
 import { useGetWorkspaces } from "@/features/workspaces/api/admin/use-get-admin-workspaces";
-import { useGetMember } from "@/features/members/api/admin/use-get-admin-member";
+import { useGetMember } from "@/features/members/workspace/api/admin/use-get-admin-member";
 import { EditAdminMemberForm } from "./edit-admin-member-form";
 
 interface EditAdminMemberFormWrapperProps {

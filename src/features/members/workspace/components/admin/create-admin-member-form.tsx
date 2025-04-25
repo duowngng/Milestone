@@ -23,8 +23,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { adminCreateMemberSchema } from "../../schemas";
 import { useCreateMember } from "../../api/admin/use-create-admin-member";
+import { adminCreateMemberSchema } from "@/features/members/schemas";
 import { MemberRole } from "@/features/members/types";
 
 interface CreateAdminMemberFormProps {
@@ -142,7 +142,7 @@ export const CreateAdminMemberForm = ({
                           <SelectValue placeholder="Select a role" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="ADMIN">Admin</SelectItem>
+                          <SelectItem value="MANAGER">Manager</SelectItem>
                           <SelectItem value="MEMBER">Member</SelectItem>
                         </SelectContent>
                       </Select>

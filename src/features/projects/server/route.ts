@@ -6,7 +6,7 @@ import { endOfMonth, startOfMonth, subMonths } from "date-fns";
 
 import { sessionMiddleware } from "@/lib/session-middleware";
 import { DATABASE_ID, IMAGES_BUCKET_ID, PROJECTS_ID, TASKS_ID } from "@/config";
-import { getMember } from "@/features/members/utils";
+import { getWorkspaceMember } from "@/features/members/workspace/utils";
 import { MemberRole } from "@/features/members/types";
 import { TaskStatus } from "@/features/tasks/types";
 
@@ -28,7 +28,7 @@ const app = new Hono()
         return c.json({ message: "Missing workspaceId" }, 400);
       }
 
-      const member = await getMember({
+      const member = await getWorkspaceMember({
         databases,
         workspaceId,
         userId: user.$id,
@@ -58,7 +58,7 @@ const app = new Hono()
       projectId
     );
 
-    const member = await getMember({
+    const member = await getWorkspaceMember({
       databases,
       workspaceId: project.workspaceId,
       userId: user.$id,
@@ -81,7 +81,7 @@ const app = new Hono()
 
       const { name, image, workspaceId } = c.req.valid("form");
 
-      const member = await getMember({
+      const member = await getWorkspaceMember({
         databases,
         workspaceId,
         userId: user.$id,
@@ -142,7 +142,7 @@ const app = new Hono()
         projectId
       );
 
-      const member = await getMember({
+      const member = await getWorkspaceMember({
         databases,
         workspaceId: existingProject.workspaceId,
         userId: user.$id,
@@ -198,13 +198,13 @@ const app = new Hono()
       projectId
     );
 
-    const member = await getMember({
+    const member = await getWorkspaceMember({
       databases,
       workspaceId: existingProject.workspaceId,
       userId: user.$id,
     });
 
-    if (!member || member.role !== MemberRole.ADMIN) {
+    if (!member || member.role !== MemberRole.MANAGER) {
       return c.json({ error: "Unauthorized" }, 401);
     }
 
@@ -231,7 +231,7 @@ const app = new Hono()
       projectId
     );
 
-    const member = await getMember({
+    const member = await getWorkspaceMember({
       databases,
       workspaceId: project.workspaceId,
       userId: user.$id,

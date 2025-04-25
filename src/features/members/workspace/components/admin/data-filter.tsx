@@ -15,7 +15,7 @@ import { DateRangePicker } from "@/components/date-range-picker";
 import { useMemberFilters } from "../../hooks/admin/use-member-filters";
 import { useGetUsers } from "@/features/users/api/admin/use-get-admin-users";
 import { useGetWorkspaces } from "@/features/workspaces/api/admin/use-get-admin-workspaces";
-import { MemberRole } from "../../types";
+import { MemberRole } from "@/features/members/types";
 
 export const DataFilter = () => {
   const { data: usersData } = useGetUsers();

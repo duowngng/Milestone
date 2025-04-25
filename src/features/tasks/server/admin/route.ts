@@ -4,7 +4,12 @@ import { Query } from "node-appwrite";
 import { zValidator } from "@hono/zod-validator";
 import { createAdminClient } from "@/lib/appwrite";
 
-import { DATABASE_ID, MEMBERS_ID, PROJECTS_ID, TASKS_ID } from "@/config";
+import {
+  DATABASE_ID,
+  WORKSPACE_MEMBERS_ID,
+  PROJECTS_ID,
+  TASKS_ID,
+} from "@/config";
 import { sessionMiddleware } from "@/lib/session-middleware";
 import { adminMiddleware } from "@/lib/admin-middleware";
 
@@ -69,14 +74,14 @@ const app = new Hono().get(
       projectIds.length > 0 ? [Query.contains("$id", projectIds)] : []
     );
 
-    const members = await databases.listDocuments(
+    const workspaceMembers = await databases.listDocuments(
       DATABASE_ID,
-      MEMBERS_ID,
+      WORKSPACE_MEMBERS_ID,
       assigneeIds.length > 0 ? [Query.contains("$id", assigneeIds)] : []
     );
 
     const assignees = await Promise.all(
-      members.documents.map(async (member) => {
+      workspaceMembers.documents.map(async (member) => {
         const user = await users.get(member.userId);
 
         return {

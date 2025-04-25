@@ -9,10 +9,10 @@ import { ArrowUpDown, CopyIcon, MoreVertical } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
-import { AdminMember } from "../../types";
+import { AdminWorkspaceMember } from "@/features/members/types";
 import { MemberActions } from "./member-actions";
 
-export const columns: ColumnDef<AdminMember>[] = [
+export const columns: ColumnDef<AdminWorkspaceMember>[] = [
   {
     accessorKey: "$id",
     header: ({ column }) => (

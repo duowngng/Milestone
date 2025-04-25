@@ -1,7 +1,7 @@
 import { addDays, subDays, differenceInCalendarDays, endOfDay } from "date-fns";
 import { Task, TaskStatus } from "../../types";
 import { Project } from "@/features/projects/types";
-import { Member } from "@/features/members/types";
+import { WorkspaceMember } from "@/features/members/types";
 
 export type DisplayMode = "detailed" | "compact";
 
@@ -10,7 +10,7 @@ export interface Event {
   end: Date;
   title: string;
   project: Project;
-  assignee: Member;
+  assignee: WorkspaceMember;
   status: TaskStatus;
   id: string;
   progress: number;

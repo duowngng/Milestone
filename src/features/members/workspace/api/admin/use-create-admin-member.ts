@@ -5,37 +5,32 @@ import { InferRequestType, InferResponseType } from "hono";
 import { client } from "@/lib/rpc";
 
 type ResponseType = InferResponseType<
-  (typeof client.api.admin.members)[":memberId"]["$delete"],
+  (typeof client.api.admin.members.workspace)["$post"],
   200
 >;
 type RequestType = InferRequestType<
-  (typeof client.api.admin.members)[":memberId"]["$delete"]
+  (typeof client.api.admin.members.workspace)["$post"]
 >;
 
-export const useDeleteMember = () => {
+export const useCreateMember = () => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation<ResponseType, Error, RequestType>({
-    mutationFn: async ({ param }) => {
-      const response = await client.api.admin.members[":memberId"]["$delete"]({
-        param,
-      });
+    mutationFn: async ({ form }) => {
+      const response = await client.api.admin.members.workspace.$post({ form });
 
       if (!response.ok) {
-        throw new Error("Failed to delete member");
+        throw new Error("Failed to create member");
       }
 
       return await response.json();
     },
-    onSuccess: ({ data }) => {
-      toast.success("Member deleted");
+    onSuccess: () => {
+      toast.success("Member created");
       queryClient.invalidateQueries({ queryKey: ["admin-members"] });
-      queryClient.invalidateQueries({
-        queryKey: ["admin-member", data.$id],
-      });
     },
     onError: () => {
-      toast.error("Failed to delete member");
+      toast.error("Failed to create member");
     },
   });
 

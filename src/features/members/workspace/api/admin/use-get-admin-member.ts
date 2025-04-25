@@ -10,7 +10,9 @@ export const useGetMember = ({ memberId }: UseGetMemberProps) => {
   return useQuery({
     queryKey: ["admin-member", memberId],
     queryFn: async () => {
-      const response = await client.api.admin.members[":memberId"].$get({
+      const response = await client.api.admin.members.workspace[
+        ":memberId"
+      ].$get({
         param: { memberId },
       });
 

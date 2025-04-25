@@ -7,7 +7,7 @@ import { createAdminClient } from "@/lib/appwrite";
 import {
   DATABASE_ID,
   WORKSPACES_ID,
-  MEMBERS_ID,
+  WORKSPACE_MEMBERS_ID,
   IMAGES_BUCKET_ID,
 } from "@/config";
 import { adminMiddleware } from "@/lib/admin-middleware";
@@ -161,11 +161,16 @@ const app = new Hono()
         }
       );
 
-      await databases.createDocument(DATABASE_ID, MEMBERS_ID, ID.unique(), {
-        userId,
-        workspaceId: workspace.$id,
-        role: MemberRole.ADMIN,
-      });
+      await databases.createDocument(
+        DATABASE_ID,
+        WORKSPACE_MEMBERS_ID,
+        ID.unique(),
+        {
+          userId,
+          workspaceId: workspace.$id,
+          role: MemberRole.MANAGER,
+        }
+      );
 
       return c.json({ data: workspace });
     }

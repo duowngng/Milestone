@@ -5,11 +5,11 @@ import { InferRequestType, InferResponseType } from "hono";
 import { client } from "@/lib/rpc";
 
 type ResponseType = InferResponseType<
-  (typeof client.api.admin.members)[":memberId"]["$patch"],
+  (typeof client.api.admin.members.workspace)[":memberId"]["$patch"],
   200
 >;
 type RequestType = InferRequestType<
-  (typeof client.api.admin.members)[":memberId"]["$patch"]
+  (typeof client.api.admin.members.workspace)[":memberId"]["$patch"]
 >;
 
 export const useUpdateMember = () => {
@@ -17,7 +17,9 @@ export const useUpdateMember = () => {
 
   const mutation = useMutation<ResponseType, Error, RequestType>({
     mutationFn: async ({ form, param }) => {
-      const response = await client.api.admin.members[":memberId"]["$patch"]({
+      const response = await client.api.admin.members.workspace[":memberId"][
+        "$patch"
+      ]({
         form,
         param,
       });

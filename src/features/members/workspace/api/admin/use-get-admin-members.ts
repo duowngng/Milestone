@@ -27,7 +27,7 @@ export const useGetMembers = ({
       updatedAt,
     ],
     queryFn: async () => {
-      const response = await client.api.admin.members.$get({
+      const response = await client.api.admin.members.workspace.$get({
         query: {
           userId: userId ?? undefined,
           workspaceId: workspaceId ?? undefined,

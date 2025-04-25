@@ -2,15 +2,15 @@
 
 import Link from "next/link";
 
-import { useWorkspaceId } from "../../workspaces/hooks/use-workspace-id";
-import { useGetMembers } from "@/features/members/api/use-get-members";
+import { useWorkspaceId } from "../../../workspaces/hooks/use-workspace-id";
+import { useGetMembers } from "@/features/members/workspace/api/use-get-members";
 import { useDeleteMember } from "../api/use-delete-member";
 import { useUpdateMember } from "../api/use-update-member";
-import { MemberRole } from "../types";
+import { MemberRole } from "../../types";
 
 import { ArrowLeftIcon, MoreVerticalIcon } from "lucide-react";
 import { useConfirm } from "@/hooks/use-confirm";
-import { MemberAvatar } from "./member-avatar";
+import { MemberAvatar } from "../../components/member-avatar";
 import { Fragment } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -99,11 +99,11 @@ export const MembersList = () => {
                   <DropdownMenuItem
                     className="font-medium"
                     onClick={() =>
-                      handleUpdateMember(member.$id, MemberRole.ADMIN)
+                      handleUpdateMember(member.$id, MemberRole.MANAGER)
                     }
                     disabled={isUpdatingMember}
                   >
-                    Set as Administrator
+                    Set as Manager
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="font-medium"
