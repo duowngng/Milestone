@@ -20,3 +20,19 @@ export type AdminWorkspaceMember = WorkspaceMember & {
     name: string;
   };
 };
+
+export type ProjectMember = Models.Document & {
+  projectId: string;
+  userId: string;
+  role: MemberRole;
+};
+
+export type AdminProjectMember = ProjectMember & {
+  user: {
+    name: string;
+    email: string;
+  };
+  project: {
+    name: string;
+  };
+};

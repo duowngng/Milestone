@@ -2,9 +2,10 @@ import { Hono } from "hono";
 import { handle } from "hono/vercel";
 
 import auth from "@/features/auth/server/route";
-import workspaceMembers from "@/features/members/workspace/server/route";
 import workspaces from "@/features/workspaces/server/route";
+import workspaceMembers from "@/features/members/workspace/server/route";
 import projects from "@/features/projects/server/route";
+import projectMembers from "@/features/members/project/server/route";
 import tasks from "@/features/tasks/server/route";
 import histories from "@/features/histories/server/route";
 import adminUsers from "@/features/users/server/admin/route";
@@ -18,6 +19,7 @@ const app = new Hono()
   .route("/workspaces", workspaces)
   .route("/members/workspace", workspaceMembers)
   .route("/projects", projects)
+  .route("/members/project", projectMembers)
   .route("/tasks", tasks)
   .route("/histories", histories)
   .route("/admin/users", adminUsers)
