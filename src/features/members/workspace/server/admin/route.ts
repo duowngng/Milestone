@@ -11,7 +11,7 @@ import { DATABASE_ID, WORKSPACE_MEMBERS_ID, WORKSPACES_ID } from "@/config";
 import {
   adminCreateMemberSchema,
   adminUpdateMemberSchema,
-} from "@/features/members/schemas";
+} from "@/features/members/workspace/schemas";
 
 import {
   AdminWorkspaceMember,

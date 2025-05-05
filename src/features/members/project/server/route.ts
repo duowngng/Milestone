@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
-import { Query } from "node-appwrite";
+import { ID, Query } from "node-appwrite";
 import { Hono } from "hono";
 
 import { sessionMiddleware } from "@/lib/session-middleware";
@@ -17,6 +17,8 @@ import {
 } from "@/features/members/project/utils";
 import { ProjectMember, MemberRole } from "@/features/members/types";
 import { Project } from "@/features/projects/types";
+
+import { createProjectMembersSchema } from "../schemas";
 
 const app = new Hono()
   .get(
@@ -212,6 +214,50 @@ const app = new Hono()
     await databases.deleteDocument(DATABASE_ID, PROJECT_MEMBERS_ID, memberId);
 
     return c.json({ data: { $id: memberToDelete.$id } });
-  });
+  })
+  .post(
+    "/bulk-create",
+    sessionMiddleware,
+    zValidator("json", createProjectMembersSchema),
+    async (c) => {
+      console.log("POST /members/project/bulk-create", c.req.valid("json"));
+      const { projectId, userIds } = c.req.valid("json");
+      const databases = c.get("databases");
+      const user = c.get("user");
+
+      const project = await databases.getDocument<Project>(
+        DATABASE_ID,
+        PROJECTS_ID,
+        projectId
+      );
+
+      const workspaceMember = await getWorkspaceMember({
+        databases,
+        workspaceId: project.workspaceId,
+        userId: user.$id,
+      });
+
+      if (!workspaceMember || !isWorkspaceManager(workspaceMember)) {
+        return c.json({ error: "Unauthorized" }, 401);
+      }
+
+      const newMembers = await Promise.all(
+        userIds.map(async (userId) => {
+          return databases.createDocument<ProjectMember>(
+            DATABASE_ID,
+            PROJECT_MEMBERS_ID,
+            ID.unique(),
+            {
+              projectId,
+              userId,
+              role: MemberRole.MEMBER,
+            }
+          );
+        })
+      );
+
+      return c.json({ data: newMembers });
+    }
+  );
 
 export default app;

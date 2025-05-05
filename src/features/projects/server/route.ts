@@ -5,7 +5,13 @@ import { zValidator } from "@hono/zod-validator";
 import { endOfMonth, startOfMonth, subMonths } from "date-fns";
 
 import { sessionMiddleware } from "@/lib/session-middleware";
-import { DATABASE_ID, IMAGES_BUCKET_ID, PROJECTS_ID, TASKS_ID } from "@/config";
+import {
+  DATABASE_ID,
+  IMAGES_BUCKET_ID,
+  PROJECT_MEMBERS_ID,
+  PROJECTS_ID,
+  TASKS_ID,
+} from "@/config";
 import { getWorkspaceMember } from "@/features/members/workspace/utils";
 import { MemberRole } from "@/features/members/types";
 import { TaskStatus } from "@/features/tasks/types";
@@ -17,12 +23,21 @@ const app = new Hono()
   .get(
     "/",
     sessionMiddleware,
-    zValidator("query", z.object({ workspaceId: z.string() })),
+    zValidator(
+      "query",
+      z.object({
+        workspaceId: z.string(),
+        memberOnly: z
+          .string()
+          .optional()
+          .transform((val) => val === "true"),
+      })
+    ),
     async (c) => {
       const user = c.get("user");
       const databases = c.get("databases");
 
-      const { workspaceId } = c.req.valid("query");
+      const { workspaceId, memberOnly } = c.req.valid("query");
 
       if (!workspaceId) {
         return c.json({ message: "Missing workspaceId" }, 400);
@@ -38,11 +53,35 @@ const app = new Hono()
         return c.json({ message: "Unauthorized" }, 401);
       }
 
-      const projects = await databases.listDocuments<Project>(
-        DATABASE_ID,
-        PROJECTS_ID,
-        [Query.equal("workspaceId", workspaceId), Query.orderDesc("$createdAt")]
-      );
+      let projects;
+
+      if (memberOnly && member.role !== MemberRole.MANAGER) {
+        const projectMembers = await databases.listDocuments(
+          DATABASE_ID,
+          PROJECT_MEMBERS_ID,
+          [Query.equal("userId", user.$id)]
+        );
+
+        const projectIds = projectMembers.documents.map((pm) => pm.projectId);
+
+        projects = await databases.listDocuments<Project>(
+          DATABASE_ID,
+          PROJECTS_ID,
+          [
+            Query.equal("workspaceId", workspaceId),
+            Query.equal("$id", projectIds),
+          ]
+        );
+      } else {
+        projects = await databases.listDocuments<Project>(
+          DATABASE_ID,
+          PROJECTS_ID,
+          [
+            Query.equal("workspaceId", workspaceId),
+            Query.orderDesc("$createdAt"),
+          ]
+        );
+      }
 
       return c.json({ data: projects });
     }

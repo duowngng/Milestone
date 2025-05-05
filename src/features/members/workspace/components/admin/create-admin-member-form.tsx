@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/select";
 
 import { useCreateMember } from "../../api/admin/use-create-admin-member";
-import { adminCreateMemberSchema } from "@/features/members/schemas";
+import { adminCreateMemberSchema } from "@/features/members/workspace/schemas";
 import { MemberRole } from "@/features/members/types";
 
 interface CreateAdminMemberFormProps {

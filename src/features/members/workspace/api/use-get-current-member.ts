@@ -4,9 +4,13 @@ import { client } from "@/lib/rpc";
 
 interface useGetMemberProps {
   workspaceId: string;
+  enabled?: boolean;
 }
 
-export const useGetCurrentMember = ({ workspaceId }: useGetMemberProps) => {
+export const useGetCurrentMember = ({
+  workspaceId,
+  enabled = true,
+}: useGetMemberProps) => {
   const query = useQuery({
     queryKey: ["member", workspaceId],
     queryFn: async () => {
@@ -22,6 +26,7 @@ export const useGetCurrentMember = ({ workspaceId }: useGetMemberProps) => {
 
       return data;
     },
+    enabled: enabled && Boolean(workspaceId),
   });
 
   return query;

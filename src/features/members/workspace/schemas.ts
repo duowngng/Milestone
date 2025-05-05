@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { MemberRole } from "./types";
+import { MemberRole } from "../types";
 
 export const adminCreateMemberSchema = z.object({
   workspaceId: z.string().trim().min(1, "Workspace ID is required"),

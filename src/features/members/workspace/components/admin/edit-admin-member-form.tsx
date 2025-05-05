@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/select";
 
 import { useUpdateMember } from "../../api/admin/use-update-admin-member";
-import { adminUpdateMemberSchema } from "@/features/members/schemas";
+import { adminUpdateMemberSchema } from "@/features/members/workspace/schemas";
 import { WorkspaceMember } from "@/features/members/types";
 
 interface EditAdminMemberFormProps {

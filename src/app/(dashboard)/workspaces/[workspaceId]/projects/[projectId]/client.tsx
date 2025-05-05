@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { PencilIcon } from "lucide-react";
+import { SettingsIcon, UsersIcon } from "lucide-react";
 
 import { useProjectId } from "@/features/projects/hooks/use-project-id";
 import { useGetProject } from "@/features/projects/api/use-get-project";
@@ -43,13 +43,21 @@ export const ProjectIdClient = () => {
           />
           <p className="text-lg font-semibold">{project.name}</p>
         </div>
-        <div>
+        <div className="flex items-center gap-2">
           <Button variant="secondary" size="sm" asChild>
             <Link
               href={`/workspaces/${project.workspaceId}/projects/${project.$id}/settings`}
             >
-              <PencilIcon className="size-4 mr-2" />
-              Edit Project
+              <SettingsIcon className="size-4 lg:mr-2" />
+              <span className="hidden lg:block">Project Settings</span>
+            </Link>
+          </Button>
+          <Button variant="secondary" size="sm" asChild>
+            <Link
+              href={`/workspaces/${project.workspaceId}/projects/${project.$id}/members`}
+            >
+              <UsersIcon className="size-4 lg:mr-2" />
+              <span className="hidden lg:block">Project Members</span>
             </Link>
           </Button>
         </div>

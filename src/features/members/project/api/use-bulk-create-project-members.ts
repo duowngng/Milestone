@@ -7,40 +7,40 @@ import { client } from "@/lib/rpc";
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 
 type ResponseType = InferResponseType<
-  (typeof client.api.members.project)[":memberId"]["$delete"],
+  (typeof client.api.members.project)["bulk-create"]["$post"],
   200
 >;
 type RequestType = InferRequestType<
-  (typeof client.api.members.project)[":memberId"]["$delete"]
-> & { projectId: string };
+  (typeof client.api.members.project)["bulk-create"]["$post"]
+>;
 
-export const useDeleteProjectMember = () => {
+export const useBulkCreateProjectMembers = () => {
   const queryClient = useQueryClient();
   const workspaceId = useWorkspaceId();
 
   const mutation = useMutation<ResponseType, Error, RequestType>({
-    mutationFn: async ({ param }) => {
-      const response = await client.api.members.project[":memberId"]["$delete"](
-        {
-          param,
-        }
+    mutationFn: async ({ json }) => {
+      console.log("POST /members/project/bulk-create", json);
+      const response = await client.api.members.project["bulk-create"]["$post"](
+        { json }
       );
 
       if (!response.ok) {
-        throw new Error("Failed to delete project member");
+        throw new Error("Failed to add members to the project");
       }
 
       return await response.json();
     },
-    onSuccess: (_, variables) => {
-      const { projectId } = variables;
-      toast.success("Project member deleted");
+    onSuccess: (_, { json }) => {
+      const { projectId } = json;
+      toast.success("Members added to the project");
       queryClient.invalidateQueries({
         queryKey: ["projectMembers", workspaceId, projectId],
       });
     },
-    onError: () => {
-      toast.error("Failed to delete project member");
+    onError: (error) => {
+      console.error("Error adding members:", error);
+      toast.error("Failed to add members to the project");
     },
   });
 
