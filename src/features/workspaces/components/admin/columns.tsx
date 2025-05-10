@@ -4,7 +4,14 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, CopyIcon, MoreVertical } from "lucide-react";
+import {
+  ArrowUpDown,
+  CopyIcon,
+  MoreVertical,
+  Users,
+  ChevronDown,
+  ChevronRight,
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -98,6 +105,41 @@ export const columns: ColumnDef<AdminWorkspace>[] = [
     cell: ({ row }) => {
       const inviteCode = row.original.inviteCode;
       return <span className="font-mono text-xs">{inviteCode}</span>;
+    },
+  },
+  {
+    accessorKey: "members",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        Members
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
+    cell: ({ row }) => {
+      const workspace = row.original;
+      const memberCount = workspace.members?.length || 0;
+      const isOpen = workspace._isOpen;
+
+      return (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <Users className="size-3.5 mr-2" />
+            <span>
+              {memberCount} Member{memberCount !== 1 && "s"}
+            </span>
+          </div>
+          <div className="mr-4">
+            {isOpen ? (
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            ) : (
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            )}
+          </div>
+        </div>
+      );
     },
   },
   {

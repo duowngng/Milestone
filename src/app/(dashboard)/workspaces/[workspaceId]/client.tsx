@@ -6,8 +6,8 @@ import { PlusIcon, CalendarIcon, SettingsIcon } from "lucide-react";
 
 import { Task } from "@/features/tasks/types";
 import { Project } from "@/features/projects/types";
-import { Member } from "@/features/members/types";
-import { useGetMembers } from "@/features/members/api/use-get-members";
+import { WorkspaceMember } from "@/features/members/types";
+import { useGetMembers } from "@/features/members/workspace/api/use-get-members";
 import { useGetProjects } from "@/features/projects/api/use-get-projects";
 import { useGetTasks } from "@/features/tasks/api/use-get-tasks";
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
@@ -171,7 +171,7 @@ export const ProjectList = ({ data, total }: ProjectListProps) => {
 };
 
 interface MemberListProps {
-  data: Member[];
+  data: WorkspaceMember[];
   total: number;
 }
 

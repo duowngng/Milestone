@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { AnimatedCircularProgressBar } from "@/components/magicui/animated-circular-progress-bar";
 
 import { Project } from "@/features/projects/types";
-import { Member } from "@/features/members/types";
+import { WorkspaceMember } from "@/features/members/types";
 import { MemberAvatar } from "@/features/members/components/member-avatar";
 import { ProjectAvatar } from "@/features/projects/components/project-avatar";
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
@@ -15,7 +15,7 @@ import { TaskStatus } from "../../types";
 
 interface EventCardProps {
   title: string;
-  assignee: Member;
+  assignee: WorkspaceMember;
   project: Project;
   status: TaskStatus;
   id: string;

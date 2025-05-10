@@ -4,18 +4,20 @@ import { client } from "@/lib/rpc";
 
 interface useGetProjectsProps {
   workspaceId: string;
+  memberOnly?: boolean;
   enabled?: boolean;
 }
 
 export const useGetProjects = ({
   workspaceId,
-  enabled = true
+  memberOnly = false,
+  enabled = true,
 }: useGetProjectsProps) => {
   const query = useQuery({
-    queryKey: ["projects", workspaceId],
+    queryKey: ["projects", workspaceId, memberOnly],
     queryFn: async () => {
       const response = await client.api.projects.$get({
-        query: { workspaceId },
+        query: { workspaceId, memberOnly: memberOnly.toString() },
       });
 
       if (!response.ok) {
@@ -25,8 +27,8 @@ export const useGetProjects = ({
       const { data } = await response.json();
       return data;
     },
-    enabled: enabled && Boolean(workspaceId)
+    enabled: enabled && Boolean(workspaceId),
   });
 
   return query;
-}
+};

@@ -5,13 +5,13 @@ import { zValidator } from "@hono/zod-validator";
 import { createAdminClient } from "@/lib/appwrite";
 import { isEqual } from "date-fns";
 
-import { getMember } from "@/features/members/utils";
+import { getWorkspaceMember } from "@/features/members/workspace/utils";
 import { Project } from "@/features/projects/types";
 
 import {
   DATABASE_ID,
   HISTORIES_ID,
-  MEMBERS_ID,
+  WORKSPACE_MEMBERS_ID,
   PROJECTS_ID,
   TASKS_ID,
 } from "@/config";
@@ -55,7 +55,7 @@ const app = new Hono()
         progress,
       } = c.req.valid("query");
 
-      const member = await getMember({
+      const member = await getWorkspaceMember({
         databases,
         workspaceId,
         userId: user.$id,
@@ -121,14 +121,14 @@ const app = new Hono()
         projectIds.length > 0 ? [Query.contains("$id", projectIds)] : []
       );
 
-      const members = await databases.listDocuments(
+      const workspaceMembers = await databases.listDocuments(
         DATABASE_ID,
-        MEMBERS_ID,
+        WORKSPACE_MEMBERS_ID,
         assigneeIds.length > 0 ? [Query.contains("$id", assigneeIds)] : []
       );
 
       const assignees = await Promise.all(
-        members.documents.map(async (member) => {
+        workspaceMembers.documents.map(async (member) => {
           const user = await users.get(member.userId);
 
           return {
@@ -175,7 +175,7 @@ const app = new Hono()
       taskId
     );
 
-    const currentMember = await getMember({
+    const currentMember = await getWorkspaceMember({
       databases,
       workspaceId: task.workspaceId,
       userId: currentUser.$id,
@@ -193,7 +193,7 @@ const app = new Hono()
 
     const member = await databases.getDocument(
       DATABASE_ID,
-      MEMBERS_ID,
+      WORKSPACE_MEMBERS_ID,
       task.assigneeId
     );
 
@@ -233,7 +233,7 @@ const app = new Hono()
         description,
       } = c.req.valid("json");
 
-      const member = await getMember({
+      const member = await getWorkspaceMember({
         databases,
         workspaceId,
         userId: user.$id,
@@ -307,7 +307,7 @@ const app = new Hono()
         taskId
       );
 
-      const member = await getMember({
+      const member = await getWorkspaceMember({
         databases,
         workspaceId: existingTask.workspaceId,
         userId: user.$id,
@@ -430,7 +430,7 @@ const app = new Hono()
       taskId
     );
 
-    const member = await getMember({
+    const member = await getWorkspaceMember({
       databases,
       workspaceId: task.workspaceId,
       userId: user.$id,
@@ -488,7 +488,7 @@ const app = new Hono()
         return c.json({ error: "Workspace ID is required" }, 400);
       }
 
-      const member = await getMember({
+      const member = await getWorkspaceMember({
         databases,
         workspaceId,
         userId: user.$id,

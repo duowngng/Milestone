@@ -1,69 +1,54 @@
 "use client";
 
 import Link from "next/link";
+import { ArrowLeftIcon } from "lucide-react";
+import { useQueryState } from "nuqs";
 
-import { useWorkspaceId } from "../../workspaces/hooks/use-workspace-id";
-import { useGetMembers } from "@/features/members/api/use-get-members";
-import { useDeleteMember } from "../api/use-delete-member";
-import { useUpdateMember } from "../api/use-update-member";
-import { MemberRole } from "../types";
-
-import { ArrowLeftIcon, MoreVerticalIcon } from "lucide-react";
-import { useConfirm } from "@/hooks/use-confirm";
-import { MemberAvatar } from "./member-avatar";
-import { Fragment } from "react";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { DottedSeparator } from "@/components/dotted-separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DottedSeparator } from "@/components/dotted-separator";
+
+import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
+import { useGetProjects } from "@/features/projects/api/use-get-projects";
+
+import { MembersWorkspace } from "./members-workspace";
+import { MembersProject } from "./members-project";
+import { usePrefetchProjectMembers } from "../project/hooks/use-prefetch-project-members";
+import { useGetCurrentMember } from "../workspace/api/use-get-current-member";
+import { isWorkspaceManager } from "../workspace/utils";
+import { PageLoader } from "@/components/page-loader";
 
 export const MembersList = () => {
   const workspaceId = useWorkspaceId();
-  const [ConfirmDialog, confirm] = useConfirm(
-    "Remove member",
-    "This member will be removed from the workspace",
-    "destructive"
-  );
 
-  const { data } = useGetMembers({ workspaceId });
-  const { mutate: deleteMember, isPending: isDeletingMember } =
-    useDeleteMember();
-  const { mutate: updateMember, isPending: isUpdatingMember } =
-    useUpdateMember();
+  const [activeTab, setActiveTab] = useQueryState("members-view", {
+    defaultValue: "workspace",
+  });
 
-  const handleUpdateMember = (memberId: string, role: MemberRole) => {
-    updateMember({
-      json: { role },
-      param: { memberId },
-    });
-  };
+  const { data: currentMember, isLoading: isLoadingCurrent } =
+    useGetCurrentMember({ workspaceId });
 
-  const handleDeleteMember = async (memberId: string) => {
-    const ok = await confirm();
+  const { data: projects, isLoading: isLoadingProjects } = useGetProjects({
+    workspaceId,
+  });
 
-    if (!ok) {
-      return;
-    }
+  const isLoading = isLoadingCurrent || isLoadingProjects;
 
-    deleteMember(
-      { param: { memberId } },
-      {
-        onSuccess: () => {
-          window.location.reload();
-        },
-      }
-    );
-  };
+  usePrefetchProjectMembers({
+    workspaceId,
+    projects: projects?.documents,
+    shouldPrefetch: activeTab === "project",
+  });
+
+  if (isLoading) {
+    return <PageLoader />;
+  }
+
+  const isManager = currentMember && isWorkspaceManager(currentMember);
 
   return (
     <Card className="w-full h-full border-none shadow-none">
-      <ConfirmDialog />
       <CardHeader className="flex flex-row items-center gap-x-4 p-7 space-y-0">
         <Button asChild size="sm" variant="secondary">
           <Link href={`/workspaces/${workspaceId}`}>
@@ -74,61 +59,39 @@ export const MembersList = () => {
         <CardTitle className="text-xl font-bold">Members list</CardTitle>
       </CardHeader>
       <div className="px-7">
-        <DottedSeparator />
+        <DottedSeparator className="mb-4" />
       </div>
-      <CardContent className="p-7">
-        {data?.documents.map((member, index) => (
-          <Fragment key={member.$id}>
-            <div className="flex items-center gap-2">
-              <MemberAvatar
-                className="size-10"
-                fallbackClassName="text-lg"
-                name={member.name}
+      <CardContent className="p-7 pt-0">
+        {isManager ? (
+          <Tabs
+            defaultValue={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
+            <TabsList className="w-full lg:w-auto">
+              <TabsTrigger className="h-8 w-full lg:w-auto" value="workspace">
+                Workspace Members
+              </TabsTrigger>
+              <TabsTrigger className="h-8 w-full lg:w-auto" value="project">
+                Project Members
+              </TabsTrigger>
+            </TabsList>
+            <DottedSeparator className="my-4" />
+            <TabsContent value="workspace">
+              <MembersWorkspace />
+            </TabsContent>
+            <TabsContent value="project">
+              <MembersProject
+                projects={projects?.documents || []}
+                isLoadingProjects={isLoadingProjects}
               />
-              <div className="flex flex-col">
-                <p className="text-sm font-medium">{member.name}</p>
-                <p className="text-xs text-muted-foreground">{member.email}</p>
-              </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button className="ml-auto" size="icon" variant="secondary">
-                    <MoreVerticalIcon className="size-4 text-muted-foreground" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem
-                    className="font-medium"
-                    onClick={() =>
-                      handleUpdateMember(member.$id, MemberRole.ADMIN)
-                    }
-                    disabled={isUpdatingMember}
-                  >
-                    Set as Administrator
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="font-medium"
-                    onClick={() =>
-                      handleUpdateMember(member.$id, MemberRole.MEMBER)
-                    }
-                    disabled={isUpdatingMember}
-                  >
-                    Set as Member
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="font-medium text-red-700"
-                    onClick={() => handleDeleteMember(member.$id)}
-                    disabled={isDeletingMember}
-                  >
-                    Remove {member.name}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-            {index < data.documents.length - 1 && (
-              <Separator className="my-2.5" />
-            )}
-          </Fragment>
-        ))}
+            </TabsContent>
+          </Tabs>
+        ) : (
+          <>
+            <MembersWorkspace />
+          </>
+        )}
       </CardContent>
     </Card>
   );

@@ -7,7 +7,7 @@ import { endOfMonth, startOfMonth, subMonths } from "date-fns";
 import {
   DATABASE_ID,
   WORKSPACES_ID,
-  MEMBERS_ID,
+  WORKSPACE_MEMBERS_ID,
   IMAGES_BUCKET_ID,
   TASKS_ID,
   PROJECTS_ID,
@@ -19,7 +19,7 @@ import { createWorkspaceSchema, updateWorkspaceSchema } from "../schemas";
 
 import { MemberRole } from "@/features/members/types";
 import { TaskStatus } from "@/features/tasks/types";
-import { getMember } from "@/features/members/utils";
+import { getWorkspaceMember } from "@/features/members/workspace/utils";
 import { Workspace } from "../types";
 
 const app = new Hono()
@@ -27,16 +27,20 @@ const app = new Hono()
     const user = c.get("user");
     const databases = c.get("databases");
 
-    const members = await databases.listDocuments(DATABASE_ID, MEMBERS_ID, [
-      Query.equal("userId", user.$id),
-    ]);
+    const workspaceMembers = await databases.listDocuments(
+      DATABASE_ID,
+      WORKSPACE_MEMBERS_ID,
+      [Query.equal("userId", user.$id)]
+    );
 
-    if (members.total === 0) {
+    if (workspaceMembers.total === 0) {
       const response = { data: { documents: [], total: 0 } };
       return c.json(response);
     }
 
-    const workspaceIds = members.documents.map((member) => member.workspaceId);
+    const workspaceIds = workspaceMembers.documents.map(
+      (member) => member.workspaceId
+    );
 
     const workspaces = await databases.listDocuments(
       DATABASE_ID,
@@ -52,7 +56,7 @@ const app = new Hono()
     const databases = c.get("databases");
     const { workspaceId } = c.req.param();
 
-    const member = await getMember({
+    const member = await getWorkspaceMember({
       databases,
       workspaceId,
       userId: user.$id,
@@ -132,11 +136,16 @@ const app = new Hono()
         }
       );
 
-      await databases.createDocument(DATABASE_ID, MEMBERS_ID, ID.unique(), {
-        userId: user.$id,
-        workspaceId: workspace.$id,
-        role: MemberRole.ADMIN,
-      });
+      await databases.createDocument(
+        DATABASE_ID,
+        WORKSPACE_MEMBERS_ID,
+        ID.unique(),
+        {
+          userId: user.$id,
+          workspaceId: workspace.$id,
+          role: MemberRole.MANAGER,
+        }
+      );
 
       return c.json({ data: workspace });
     }
@@ -154,13 +163,13 @@ const app = new Hono()
       const { workspaceId } = c.req.param();
       const { name, image } = c.req.valid("form");
 
-      const member = await getMember({
+      const member = await getWorkspaceMember({
         databases,
         workspaceId,
         userId: user.$id,
       });
 
-      if (!member || member.role !== MemberRole.ADMIN) {
+      if (!member || member.role !== MemberRole.MANAGER) {
         return c.json({ error: "Unauthorized" }, 401);
       }
 
@@ -205,13 +214,13 @@ const app = new Hono()
 
     const { workspaceId } = c.req.param();
 
-    const member = await getMember({
+    const member = await getWorkspaceMember({
       databases,
       workspaceId,
       userId: user.$id,
     });
 
-    if (!member || member.role !== MemberRole.ADMIN) {
+    if (!member || member.role !== MemberRole.MANAGER) {
       return c.json({ error: "Unauthorized" }, 401);
     }
 
@@ -242,13 +251,13 @@ const app = new Hono()
 
     const { workspaceId } = c.req.param();
 
-    const member = await getMember({
+    const member = await getWorkspaceMember({
       databases,
       workspaceId,
       userId: user.$id,
     });
 
-    if (!member || member.role !== MemberRole.ADMIN) {
+    if (!member || member.role !== MemberRole.MANAGER) {
       return c.json({ error: "Unauthorized" }, 401);
     }
 
@@ -275,7 +284,7 @@ const app = new Hono()
       const databases = c.get("databases");
       const user = c.get("user");
 
-      const member = await getMember({
+      const member = await getWorkspaceMember({
         databases,
         workspaceId,
         userId: user.$id,
@@ -295,11 +304,16 @@ const app = new Hono()
         return c.json({ error: "Invalid invite code" }, 400);
       }
 
-      await databases.createDocument(DATABASE_ID, MEMBERS_ID, ID.unique(), {
-        workspaceId,
-        userId: user.$id,
-        role: MemberRole.MEMBER,
-      });
+      await databases.createDocument(
+        DATABASE_ID,
+        WORKSPACE_MEMBERS_ID,
+        ID.unique(),
+        {
+          workspaceId,
+          userId: user.$id,
+          role: MemberRole.MEMBER,
+        }
+      );
 
       return c.json({ data: workspace });
     }
@@ -310,7 +324,7 @@ const app = new Hono()
     const user = c.get("user");
     const { workspaceId } = c.req.param();
 
-    const member = await getMember({
+    const member = await getWorkspaceMember({
       databases,
       workspaceId,
       userId: user.$id,
