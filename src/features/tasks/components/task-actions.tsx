@@ -12,14 +12,16 @@ import {
 
 import { useDeleteTask } from "../api/use-delete-task";
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
+import { useProjectId } from "@/features/projects/hooks/use-project-id";
 
 interface TaskActionsProps {
   id: string;
   projectId: string;
   children: React.ReactNode;
-};
+}
 
 export const TaskActions = ({ id, projectId, children }: TaskActionsProps) => {
+  const paramProjectId = useProjectId();
   const workspaceId = useWorkspaceId();
   const router = useRouter();
 
@@ -54,9 +56,7 @@ export const TaskActions = ({ id, projectId, children }: TaskActionsProps) => {
     <div className="flex justify-end">
       <ConfirmDialog />
       <DropdownMenu modal={false}>
-        <DropdownMenuTrigger asChild>
-          {children}
-        </DropdownMenuTrigger>
+        <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuItem
             onClick={onOpenTask}
@@ -65,13 +65,15 @@ export const TaskActions = ({ id, projectId, children }: TaskActionsProps) => {
             <ExternalLinkIcon className="size-4 mr-2 stroke-2" />
             Task Details
           </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={onOpenProject}
-            className="font-medium p-[10px]"
-          >
-            <ExternalLinkIcon className="size-4 mr-2 stroke-2" />
-            Open Project
-          </DropdownMenuItem>
+          {!paramProjectId && (
+            <DropdownMenuItem
+              onClick={onOpenProject}
+              className="font-medium p-[10px]"
+            >
+              <ExternalLinkIcon className="size-4 mr-2 stroke-2" />
+              Open Project
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem
             onClick={() => open(id)}
             className="font-medium p-[10px]"
@@ -90,5 +92,5 @@ export const TaskActions = ({ id, projectId, children }: TaskActionsProps) => {
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
-  )
-}
+  );
+};

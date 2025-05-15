@@ -13,6 +13,7 @@ import { columns } from "./table/columns";
 import { DataTable } from "./table/data-table";
 import { DataKanban } from "./kanban/data-kanban";
 import { DataCalendar } from "./calendar/data.calendar";
+import { DataGantt } from "./gantt/data-gantt";
 
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 import { useProjectId } from "@/features/projects/hooks/use-project-id";
@@ -93,6 +94,9 @@ export const TaskViewSwitcher = ({
             <TabsTrigger className="h-8 w-full lg:w-auto" value="calendar">
               Calendar
             </TabsTrigger>
+            <TabsTrigger className="h-8 w-full lg:w-auto" value="gantt">
+              Timeline
+            </TabsTrigger>
           </TabsList>
           <Button
             onClick={() => open({ projectId: paramProjectId })}
@@ -123,6 +127,9 @@ export const TaskViewSwitcher = ({
             </TabsContent>
             <TabsContent value="calendar" className="mt-0 h-full pb-4">
               <DataCalendar data={tasks?.documents ?? []} />
+            </TabsContent>
+            <TabsContent value="gantt" className="mt-0 h-full pb-4">
+              <DataGantt data={tasks?.documents ?? []} />
             </TabsContent>
           </>
         )}

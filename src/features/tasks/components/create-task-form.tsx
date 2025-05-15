@@ -40,6 +40,7 @@ interface CreateTaskFormProps {
   memberOptions: { id: string; name: string }[];
   initialStatus?: TaskStatus;
   initialProjectId?: string;
+  initialStartDate?: Date;
 }
 
 export const CreateTaskForm = ({
@@ -48,6 +49,7 @@ export const CreateTaskForm = ({
   memberOptions,
   initialStatus,
   initialProjectId,
+  initialStartDate,
 }: CreateTaskFormProps) => {
   const workspaceId = useWorkspaceId();
   const { mutate, isPending } = useCreateTask();
@@ -59,7 +61,7 @@ export const CreateTaskForm = ({
       status: initialStatus || TaskStatus.BACKLOG,
       projectId: initialProjectId || "",
       name: "",
-      startDate: undefined,
+      startDate: initialStartDate || undefined,
       dueDate: undefined,
       assigneeId: "",
       progress: "0",
