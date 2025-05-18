@@ -28,11 +28,13 @@ import { useTaskFilters } from "../hooks/use-task-filters";
 interface DataFilterProps {
   hideProjectFilter?: boolean;
   memberId?: string;
+  isAdmin?: boolean;
 }
 
 export const DataFilter = ({
   hideProjectFilter,
   memberId,
+  isAdmin = false,
 }: DataFilterProps) => {
   const workspaceId = useWorkspaceId();
   const initialFilterApplied = useRef(false);
@@ -121,11 +123,11 @@ export const DataFilter = ({
   );
 
   useEffect(() => {
-    if (memberId && !initialFilterApplied.current && !assigneeId) {
+    if (memberId && !initialFilterApplied.current && !assigneeId && !isAdmin) {
       onAssigneeChange(memberId);
       initialFilterApplied.current = true;
     }
-  }, [memberId, assigneeId, onAssigneeChange]);
+  }, [memberId, assigneeId, onAssigneeChange, isAdmin]);
 
   if (isLoading) {
     return <PageLoader />;

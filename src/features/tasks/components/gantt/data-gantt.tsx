@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ExternalLinkIcon, PencilIcon, TrashIcon } from "lucide-react";
 import { differenceInDays, parseISO } from "date-fns";
 import groupBy from "lodash.groupby";
+import { cn } from "@/lib/utils";
 
 import {
   GanttProvider,
@@ -40,6 +41,7 @@ import { Task, TaskStatus } from "../../types";
 
 interface DataGanttProps {
   data: Task[];
+  isAdmin?: boolean;
 }
 
 const statusColorMap: Record<TaskStatus, string> = {
@@ -50,7 +52,7 @@ const statusColorMap: Record<TaskStatus, string> = {
   [TaskStatus.DONE]: "#34d399",
 };
 
-export function DataGantt({ data }: DataGanttProps) {
+export function DataGantt({ data, isAdmin }: DataGanttProps) {
   const router = useRouter();
   const workspaceId = useWorkspaceId();
   const paramProjectId = useProjectId();
@@ -266,8 +268,18 @@ export function DataGantt({ data }: DataGanttProps) {
                           Edit Task
                         </ContextMenuItem>
                         <ContextMenuItem
-                          className="text-red-700 focus:text-red-700 font-medium p-[10px]"
-                          onClick={() => handleDelete(f.id)}
+                          onClick={(e) => {
+                            if (!isAdmin) {
+                              e.preventDefault();
+                              return;
+                            }
+                            handleDelete(f.id);
+                          }}
+                          className={cn(
+                            "font-medium p-[10px]",
+                            "text-red-700 focus:text-red-700",
+                            !isAdmin && "opacity-50 cursor-not-allowed"
+                          )}
                         >
                           <TrashIcon className="size-4 mr-2 stroke-2" />
                           Delete Task
@@ -281,7 +293,9 @@ export function DataGantt({ data }: DataGanttProps) {
           </GanttFeatureList>
 
           <GanttToday />
-          <GanttCreateMarkerTrigger onCreateMarker={handleAddMarker} />
+          {isAdmin && (
+            <GanttCreateMarkerTrigger onCreateMarker={handleAddMarker} />
+          )}
         </GanttTimeline>
       </GanttProvider>
     </>

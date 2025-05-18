@@ -34,11 +34,13 @@ import { toast } from "sonner";
 interface EditWorkspaceFormProps {
   onCancel?: () => void;
   initialValues: Workspace;
+  isManager?: boolean;
 }
 
 export const EditWorkspaceForm = ({
   onCancel,
   initialValues,
+  isManager,
 }: EditWorkspaceFormProps) => {
   const router = useRouter();
   const { mutate, isPending } = useUpdateWorkspace();
@@ -128,8 +130,12 @@ export const EditWorkspaceForm = ({
 
   return (
     <div className="flex flex-col gap-y-4">
-      <ResetInviteCodeDialog />
-      <DeleteDialog />
+      {isManager && (
+        <>
+          <ResetInviteCodeDialog />
+          <DeleteDialog />
+        </>
+      )}
       <Card className="w-full h-full border-none shadow-none">
         <CardHeader className="flex flex-row items-center gap-x-4 p-7 space-y-0">
           <Button
@@ -158,6 +164,7 @@ export const EditWorkspaceForm = ({
                 <FormField
                   control={form.control}
                   name="name"
+                  disabled={!isManager}
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Workspace Name</FormLabel>
@@ -207,56 +214,61 @@ export const EditWorkspaceForm = ({
                             onChange={handleImageChange}
                             disabled={isPending}
                           />
-                          {field.value ? (
-                            <Button
-                              type="button"
-                              variant="destructive"
-                              size="xs"
-                              disabled={isPending}
-                              className="w-fit mt-2"
-                              onClick={() => {
-                                field.onChange(null);
-                                if (inputRef.current) {
-                                  inputRef.current.value = "";
-                                }
-                              }}
-                            >
-                              Remove Image
-                            </Button>
-                          ) : (
-                            <Button
-                              type="button"
-                              variant="tertiary"
-                              size="xs"
-                              disabled={isPending}
-                              className="w-fit mt-2"
-                              onClick={() => inputRef.current?.click()}
-                            >
-                              Upload Image
-                            </Button>
-                          )}
+                          {isManager &&
+                            (field.value ? (
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="xs"
+                                disabled={isPending}
+                                className="w-fit mt-2"
+                                onClick={() => {
+                                  field.onChange(null);
+                                  if (inputRef.current) {
+                                    inputRef.current.value = "";
+                                  }
+                                }}
+                              >
+                                Remove Image
+                              </Button>
+                            ) : (
+                              <Button
+                                type="button"
+                                variant="tertiary"
+                                size="xs"
+                                disabled={isPending}
+                                className="w-fit mt-2"
+                                onClick={() => inputRef.current?.click()}
+                              >
+                                Upload Image
+                              </Button>
+                            ))}
                         </div>
                       </div>
                     </div>
                   )}
                 />
               </div>
-              <DottedSeparator className="py-7" />
-              <div className="flex items-center justify-between">
-                <Button
-                  type="button"
-                  size="lg"
-                  variant="secondary"
-                  onClick={onCancel}
-                  disabled={isPending}
-                  className={cn(!onCancel && "invisible")}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" size="lg" disabled={isPending}>
-                  Save Changes
-                </Button>
-              </div>
+              {isManager && (
+                <>
+                  <DottedSeparator className="py-7" />
+                  <div className="flex items-center justify-between">
+                    <Button
+                      type="button"
+                      size="lg"
+                      variant="secondary"
+                      onClick={onCancel}
+                      disabled={isPending}
+                      className={cn(!onCancel && "invisible")}
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit" size="lg" disabled={isPending}>
+                      Save Changes
+                    </Button>
+                  </div>
+                </>
+              )}
             </form>
           </Form>
         </CardContent>
@@ -280,42 +292,48 @@ export const EditWorkspaceForm = ({
                 </Button>
               </div>
             </div>
-            <DottedSeparator className="py-7" />
-            <Button
-              type="button"
-              size="sm"
-              variant="destructive"
-              className="w-fit ml-auto"
-              disabled={isPending || isResetingInviteCode}
-              onClick={handleResetInviteCode}
-            >
-              Reset invite link
-            </Button>
+            {isManager && (
+              <>
+                <DottedSeparator className="py-7" />
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="destructive"
+                  className="w-fit ml-auto"
+                  disabled={isPending || isResetingInviteCode}
+                  onClick={handleResetInviteCode}
+                >
+                  Reset invite link
+                </Button>
+              </>
+            )}
           </div>
         </CardContent>
       </Card>
-      <Card className="w-full h-full border-none shadow-none">
-        <CardContent className="p-7">
-          <div className="flex flex-col">
-            <h3 className="font-bold">Danger Zone</h3>
-            <p className="text-sm text-muted-foreground">
-              Deleting a workspace is irreversible and will remove all
-              associated data.
-            </p>
-            <DottedSeparator className="py-7" />
-            <Button
-              type="button"
-              size="sm"
-              variant="destructive"
-              className="w-fit ml-auto"
-              disabled={isPending || isDeletingWorkspace}
-              onClick={handleDelete}
-            >
-              Delete Workspace
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      {isManager && (
+        <Card className="w-full h-full border-none shadow-none">
+          <CardContent className="p-7">
+            <div className="flex flex-col">
+              <h3 className="font-bold">Danger Zone</h3>
+              <p className="text-sm text-muted-foreground">
+                Deleting a workspace is irreversible and will remove all
+                associated data.
+              </p>
+              <DottedSeparator className="py-7" />
+              <Button
+                type="button"
+                size="sm"
+                variant="destructive"
+                className="w-fit ml-auto"
+                disabled={isPending || isDeletingWorkspace}
+                onClick={handleDelete}
+              >
+                Delete Workspace
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

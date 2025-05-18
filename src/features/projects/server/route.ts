@@ -18,6 +18,7 @@ import { TaskStatus } from "@/features/tasks/types";
 
 import { createProjectSchema, updateProjectSchema } from "../schemas";
 import { Project } from "../types";
+import { getProjectMember } from "@/features/members/project/utils";
 
 const app = new Hono()
   .get(
@@ -27,17 +28,13 @@ const app = new Hono()
       "query",
       z.object({
         workspaceId: z.string(),
-        memberOnly: z
-          .string()
-          .optional()
-          .transform((val) => val === "true"),
       })
     ),
     async (c) => {
       const user = c.get("user");
       const databases = c.get("databases");
 
-      const { workspaceId, memberOnly } = c.req.valid("query");
+      const { workspaceId } = c.req.valid("query");
 
       if (!workspaceId) {
         return c.json({ message: "Missing workspaceId" }, 400);
@@ -53,9 +50,7 @@ const app = new Hono()
         return c.json({ message: "Unauthorized" }, 401);
       }
 
-      let projects;
-
-      if (memberOnly && member.role !== MemberRole.MANAGER) {
+      if (member.role !== MemberRole.MANAGER) {
         const projectMembers = await databases.listDocuments(
           DATABASE_ID,
           PROJECT_MEMBERS_ID,
@@ -64,7 +59,7 @@ const app = new Hono()
 
         const projectIds = projectMembers.documents.map((pm) => pm.projectId);
 
-        projects = await databases.listDocuments<Project>(
+        const projects = await databases.listDocuments<Project>(
           DATABASE_ID,
           PROJECTS_ID,
           [
@@ -72,16 +67,15 @@ const app = new Hono()
             Query.equal("$id", projectIds),
           ]
         );
-      } else {
-        projects = await databases.listDocuments<Project>(
-          DATABASE_ID,
-          PROJECTS_ID,
-          [
-            Query.equal("workspaceId", workspaceId),
-            Query.orderDesc("$createdAt"),
-          ]
-        );
+
+        return c.json({ data: projects });
       }
+
+      const projects = await databases.listDocuments<Project>(
+        DATABASE_ID,
+        PROJECTS_ID,
+        [Query.equal("workspaceId", workspaceId), Query.orderDesc("$createdAt")]
+      );
 
       return c.json({ data: projects });
     }
@@ -126,7 +120,7 @@ const app = new Hono()
         userId: user.$id,
       });
 
-      if (!member) {
+      if (!member || member.role !== MemberRole.MANAGER) {
         return c.json({ message: "Unauthorized" }, 401);
       }
 
@@ -175,19 +169,13 @@ const app = new Hono()
       const { projectId } = c.req.param();
       const { name, image } = c.req.valid("form");
 
-      const existingProject = await databases.getDocument<Project>(
-        DATABASE_ID,
-        PROJECTS_ID,
-        projectId
-      );
-
-      const member = await getWorkspaceMember({
+      const member = await getProjectMember({
         databases,
-        workspaceId: existingProject.workspaceId,
+        projectId,
         userId: user.$id,
       });
 
-      if (!member) {
+      if (!member || member.role !== MemberRole.MANAGER) {
         return c.json({ error: "Unauthorized" }, 401);
       }
 
@@ -231,15 +219,9 @@ const app = new Hono()
 
     const { projectId } = c.req.param();
 
-    const existingProject = await databases.getDocument<Project>(
-      DATABASE_ID,
-      PROJECTS_ID,
-      projectId
-    );
-
-    const member = await getWorkspaceMember({
+    const member = await getProjectMember({
       databases,
-      workspaceId: existingProject.workspaceId,
+      projectId,
       userId: user.$id,
     });
 

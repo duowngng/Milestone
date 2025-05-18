@@ -47,6 +47,7 @@ export const ProjectIdMembersClient = () => {
   const { data: currentMember } = useGetCurrentProjectMember({
     workspaceId,
     projectId,
+    enabled: !!projectId && !!workspaceId,
   });
 
   const { mutate: deleteMember, isPending: isDeletingMember } =
