@@ -18,6 +18,7 @@ import {
   GanttFeatureListGroup,
   GanttFeatureItem,
   GanttToday,
+  GanttMarker,
   GanttCreateMarkerTrigger,
 } from "@/components/ui/kibo-ui/gantt";
 import {
@@ -27,11 +28,15 @@ import {
   ContextMenuItem,
 } from "@/components/ui/context-menu";
 
+import { useConfirm } from "@/hooks/use-confirm";
 import { MemberAvatar } from "@/features/members/components/member-avatar";
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 import { useProjectId } from "@/features/projects/hooks/use-project-id";
 import { useGetProjects } from "@/features/projects/api/use-get-projects";
-import { useConfirm } from "@/hooks/use-confirm";
+import { Milestone } from "@/features/milestones/types";
+import { useCreateMilestoneModal } from "@/features/milestones/hooks/use-create-milestone-modal";
+import { useEditMilestoneModal } from "@/features/milestones/hooks/use-edit-milestone-modal";
+import { useDeleteMilestone } from "@/features/milestones/api/use-delete-milestone";
 
 import { useCreateTaskModal } from "../../hooks/use-create-task-modal";
 import { useEditTaskModal } from "../../hooks/use-edit-task-modal";
@@ -41,7 +46,8 @@ import { Task, TaskStatus } from "../../types";
 
 interface DataGanttProps {
   data: Task[];
-  isAdmin?: boolean;
+  milestones?: Milestone[];
+  isManager?: boolean;
 }
 
 const statusColorMap: Record<TaskStatus, string> = {
@@ -52,12 +58,124 @@ const statusColorMap: Record<TaskStatus, string> = {
   [TaskStatus.DONE]: "#34d399",
 };
 
-export function DataGantt({ data, isAdmin }: DataGanttProps) {
+const projectColorSchemes: Array<{
+  marker: string;
+  feature: string;
+}> = [
+  {
+    marker: "bg-indigo-100 text-indigo-900 hover:bg-indigo-200",
+    feature: "bg-indigo-300",
+  },
+  {
+    marker: "bg-green-100 text-green-900 hover:bg-green-200",
+    feature: "bg-green-300",
+  },
+  {
+    marker: "bg-purple-100 text-purple-900 hover:bg-purple-200",
+    feature: "bg-purple-300",
+  },
+  { marker: "bg-red-100 text-red-900 hover:bg-red-200", feature: "bg-red-300" },
+  {
+    marker: "bg-blue-100 text-blue-900 hover:bg-blue-200",
+    feature: "bg-blue-300",
+  },
+  {
+    marker: "bg-orange-100 text-orange-900 hover:bg-orange-200",
+    feature: "bg-orange-300",
+  },
+  {
+    marker: "bg-teal-100 text-teal-900 hover:bg-teal-200",
+    feature: "bg-teal-300",
+  },
+  {
+    marker: "bg-amber-100 text-amber-900 hover:bg-amber-200",
+    feature: "bg-amber-300",
+  },
+  {
+    marker: "bg-cyan-100 text-cyan-900 hover:bg-cyan-200",
+    feature: "bg-cyan-300",
+  },
+  {
+    marker: "bg-rose-100 text-rose-900 hover:bg-rose-200",
+    feature: "bg-rose-300",
+  },
+];
+
+const makeWorkspaceColorPicker = () => {
+  const map = new Map<string, { marker: string; feature: string }>();
+  let idx = 0;
+  return (projectId: string) => {
+    if (!map.has(projectId)) {
+      map.set(
+        projectId,
+        projectColorSchemes[idx++ % projectColorSchemes.length]
+      );
+    }
+    return map.get(projectId)!;
+  };
+};
+
+const projectViewColorPicker = (): ((projectId: string) => {
+  marker: string;
+  feature: string;
+}) => {
+  return (_projectId: string) => ({
+    marker: "bg-indigo-100 text-indigo-900 hover:bg-indigo-200",
+    feature: "bg-indigo-300",
+  });
+};
+
+const makeTaskMapper = (
+  pickColor: (projectId: string) => { marker: string; feature: string }
+) => {
+  return (t: Task) => {
+    const colorScheme = pickColor(t.projectId);
+    return {
+      id: t.$id,
+      name: t.name,
+      startAt: parseISO(t.startDate),
+      endAt: parseISO(t.dueDate),
+      progress: t.progress,
+      status: {
+        id: t.$id,
+        name: t.status,
+        color: statusColorMap[t.status as TaskStatus],
+      },
+      assignee: t.assignee,
+      group: t.projectId,
+      projectColorScheme: colorScheme,
+    };
+  };
+};
+
+const makeMilestoneMapper = (
+  pickColor: (projectId: string) => { marker: string; feature: string }
+) => {
+  return (m: Milestone) => {
+    const colorScheme = pickColor(m.projectId);
+    return {
+      id: m.$id,
+      date: parseISO(m.date),
+      label: m.name,
+      projectId: m.projectId,
+      projectName: m.project.name,
+      colorScheme: colorScheme.marker,
+    };
+  };
+};
+
+export function DataGantt({
+  data,
+  milestones = [],
+  isManager,
+}: DataGanttProps) {
   const router = useRouter();
   const workspaceId = useWorkspaceId();
   const paramProjectId = useProjectId();
   const { open } = useCreateTaskModal();
   const editTask = useEditTaskModal();
+  const editMilestone = useEditMilestoneModal();
+  const { open: openCreateMilestone } = useCreateMilestoneModal();
 
   const [ConfirmDialog, confirm] = useConfirm(
     "Delete task",
@@ -65,8 +183,15 @@ export function DataGantt({ data, isAdmin }: DataGanttProps) {
     "destructive"
   );
 
+  const [MilestoneConfirmDialog, confirmMilestone] = useConfirm(
+    "Delete milestone",
+    "Are you sure you want to delete this milestone?",
+    "destructive"
+  );
+
   const { mutate: deleteTask } = useDeleteTask();
   const { mutate: updateTask } = useUpdateTask();
+  const { mutate: deleteMilestone } = useDeleteMilestone();
 
   const { data: projectsData } = useGetProjects({
     workspaceId,
@@ -82,26 +207,23 @@ export function DataGantt({ data, isAdmin }: DataGanttProps) {
     [projectsData]
   );
 
-  const features = useMemo(
+  const pickProjectColor = useMemo(
     () =>
-      data
-        .map((t) => ({
-          id: t.$id,
-          name: t.name,
-          startAt: parseISO(t.startDate),
-          endAt: parseISO(t.dueDate),
-          progress: t.progress,
-          status: {
-            id: t.$id,
-            name: t.status,
-            color: statusColorMap[t.status as TaskStatus],
-          },
-          assignee: t.assignee,
-          group: t.projectId,
-        }))
-        .sort((a, b) => a.startAt.getTime() - b.startAt.getTime()),
-    [data]
+      paramProjectId ? projectViewColorPicker() : makeWorkspaceColorPicker(),
+    [paramProjectId]
   );
+
+  const features = useMemo(() => {
+    const mapTask = makeTaskMapper(pickProjectColor);
+    return data
+      .map(mapTask)
+      .sort((a, b) => a.startAt.getTime() - b.startAt.getTime());
+  }, [data, pickProjectColor]);
+
+  const milestoneMarkers = useMemo(() => {
+    const mapMilestone = makeMilestoneMapper(pickProjectColor);
+    return milestones.map(mapMilestone);
+  }, [milestones, pickProjectColor]);
 
   const grouped = useMemo(() => groupBy(features, "group"), [features]);
   const sortedGroups = useMemo(
@@ -146,6 +268,13 @@ export function DataGantt({ data, isAdmin }: DataGanttProps) {
     deleteTask({ param: { taskId: id } });
   };
 
+  const handleDeleteMilestone = async (id: string) => {
+    const ok = await confirmMilestone();
+    if (!ok) return;
+
+    deleteMilestone({ param: { milestoneId: id } });
+  };
+
   const handleMove = (id: string, startAt: Date, endAt: Date | null) => {
     const task = data.find((t) => t.$id === id);
     if (!task) return;
@@ -161,12 +290,22 @@ export function DataGantt({ data, isAdmin }: DataGanttProps) {
     });
   };
 
-  const handleAddMarker = (date: Date) => console.log("Create marker", date);
+  const handleAddMarker = (date: Date) => {
+    if (isManager && paramProjectId) {
+      openCreateMilestone({ date });
+    }
+  };
 
-  console.log("Gantt features", features);
+  const handleEditMilestone = (id: string) => {
+    if (isManager) {
+      editMilestone.open(id);
+    }
+  };
+
   return (
     <>
       <ConfirmDialog />
+      <MilestoneConfirmDialog />
       <GanttProvider
         range="daily"
         zoom={100}
@@ -207,7 +346,9 @@ export function DataGantt({ data, isAdmin }: DataGanttProps) {
                             onMove={handleMove}
                             {...f}
                             progress={f.progress}
-                            statusColor="rgb(165 180 252)"
+                            bgColor={
+                              f.projectColorScheme.feature || "bg-indigo-300"
+                            }
                           >
                             <p className="flex flex-1 text-xs items-center justify-between min-w-0">
                               <span className="flex items-center gap-1 min-w-0">
@@ -269,7 +410,7 @@ export function DataGantt({ data, isAdmin }: DataGanttProps) {
                         </ContextMenuItem>
                         <ContextMenuItem
                           onClick={(e) => {
-                            if (!isAdmin) {
+                            if (!isManager) {
                               e.preventDefault();
                               return;
                             }
@@ -278,7 +419,7 @@ export function DataGantt({ data, isAdmin }: DataGanttProps) {
                           className={cn(
                             "font-medium p-[10px]",
                             "text-red-700 focus:text-red-700",
-                            !isAdmin && "opacity-50 cursor-not-allowed"
+                            !isManager && "opacity-50 cursor-not-allowed"
                           )}
                         >
                           <TrashIcon className="size-4 mr-2 stroke-2" />
@@ -292,8 +433,25 @@ export function DataGantt({ data, isAdmin }: DataGanttProps) {
             ))}
           </GanttFeatureList>
 
-          <GanttToday />
-          {isAdmin && (
+          <GanttToday className="hover:font-semibold" />
+
+          {milestoneMarkers.map((marker) => (
+            <GanttMarker
+              key={marker.id}
+              id={marker.id}
+              date={marker.date}
+              label={
+                !paramProjectId
+                  ? `${marker.label} (${marker.projectName})`
+                  : marker.label
+              }
+              onEdit={isManager ? handleEditMilestone : undefined}
+              onRemove={isManager ? handleDeleteMilestone : undefined}
+              className={cn(marker.colorScheme, "hover:font-semibold")}
+            />
+          ))}
+
+          {isManager && (
             <GanttCreateMarkerTrigger onCreateMarker={handleAddMarker} />
           )}
         </GanttTimeline>

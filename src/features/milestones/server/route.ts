@@ -4,11 +4,12 @@ import { z } from "zod";
 import { ID, Query } from "node-appwrite";
 
 import { sessionMiddleware } from "@/lib/session-middleware";
-import { DATABASE_ID, MILESTONES_ID } from "@/config";
+import { DATABASE_ID, MILESTONES_ID, PROJECTS_ID } from "@/config";
 
 import { getProjectMember } from "@/features/members/project/utils";
 import { getWorkspaceMember } from "@/features/members/workspace/utils";
 import { MemberRole } from "@/features/members/types";
+import { Project } from "@/features/projects/types";
 
 import { createMilestoneSchema, updateMilestoneSchema } from "../schemas";
 import { Milestone } from "../types";
@@ -68,7 +69,33 @@ const app = new Hono()
         queries
       );
 
-      return c.json({ data: milestones });
+      const projectIds = milestones.documents.map(
+        (milestone) => milestone.projectId
+      );
+
+      const projects = await databases.listDocuments<Project>(
+        DATABASE_ID,
+        PROJECTS_ID,
+        projectIds.length > 0 ? [Query.contains("$id", projectIds)] : []
+      );
+
+      const populatedMilestones = milestones.documents.map((milestone) => {
+        const project = projects.documents.find(
+          (p) => p.$id === milestone.projectId
+        );
+
+        return {
+          ...milestone,
+          project,
+        };
+      });
+
+      return c.json({
+        data: {
+          ...milestones,
+          documents: populatedMilestones,
+        },
+      });
     }
   )
   .get("/:milestoneId", sessionMiddleware, async (c) => {
@@ -82,6 +109,12 @@ const app = new Hono()
       milestoneId
     );
 
+    const project = await databases.getDocument<Project>(
+      DATABASE_ID,
+      PROJECTS_ID,
+      milestone.projectId
+    );
+
     const workspaceMember = await getWorkspaceMember({
       databases,
       workspaceId: milestone.workspaceId,
@@ -92,12 +125,15 @@ const app = new Hono()
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    // Workspace managers can access all milestones
     if (workspaceMember.role === MemberRole.MANAGER) {
-      return c.json({ data: milestone });
+      return c.json({
+        data: {
+          ...milestone,
+          project,
+        },
+      });
     }
 
-    // Otherwise, check if user is a member of the milestone's project
     const projectMember = await getProjectMember({
       databases,
       projectId: milestone.projectId,
@@ -108,7 +144,12 @@ const app = new Hono()
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    return c.json({ data: milestone });
+    return c.json({
+      data: {
+        ...milestone,
+        project,
+      },
+    });
   })
   .post(
     "/",

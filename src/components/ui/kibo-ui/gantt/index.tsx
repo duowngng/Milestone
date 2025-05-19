@@ -39,7 +39,7 @@ import {
 } from "date-fns";
 import { atom, useAtom } from "jotai";
 import throttle from "lodash.throttle";
-import { PlusIcon, TrashIcon } from "lucide-react";
+import { PlusIcon, TrashIcon, PencilIcon } from "lucide-react";
 import {
   createContext,
   useContext,
@@ -110,7 +110,6 @@ export type GanttContextProps = {
 
 const getsDaysIn = (range: Range) => {
   // For when range is daily
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let fn = (_date: Date) => 1;
 
   if (range === "monthly" || range === "quarterly") {
@@ -814,7 +813,7 @@ export type GanttFeatureItemCardProps = Pick<GanttFeature, "id"> & {
   children?: ReactNode;
   className?: string;
   progress?: number;
-  statusColor?: string;
+  bgColor?: string;
 };
 
 export const GanttFeatureItemCard: FC<GanttFeatureItemCardProps> = ({
@@ -822,7 +821,7 @@ export const GanttFeatureItemCard: FC<GanttFeatureItemCardProps> = ({
   children,
   className,
   progress = 0,
-  statusColor,
+  bgColor,
 }) => {
   const [, setDragging] = useGanttDragging();
   const { attributes, listeners, setNodeRef } = useDraggable({ id });
@@ -837,15 +836,15 @@ export const GanttFeatureItemCard: FC<GanttFeatureItemCardProps> = ({
         className
       )}
     >
-      {progress > 0 && statusColor && (
+      {progress > 0 && bgColor && (
         <div
           className={cn(
             "absolute inset-y-0 left-0 z-0 rounded-md",
-            progress < 100 && "rounded-r-none"
+            progress < 100 && "rounded-r-none",
+            bgColor
           )}
           style={{
             width: `${progress}%`,
-            backgroundColor: statusColor,
             opacity: 0.25,
           }}
         />
@@ -871,7 +870,7 @@ export type GanttFeatureItemProps = GanttFeature & {
   className?: string;
   cardClassName?: string;
   progress?: number;
-  statusColor?: string;
+  bgColor?: string;
 };
 
 export const GanttFeatureItem: FC<GanttFeatureItemProps> = ({
@@ -880,7 +879,7 @@ export const GanttFeatureItem: FC<GanttFeatureItemProps> = ({
   className,
   cardClassName,
   progress = 0,
-  statusColor,
+  bgColor,
   ...feature
 }) => {
   const [scrollX] = useGanttScrollX();
@@ -984,7 +983,7 @@ export const GanttFeatureItem: FC<GanttFeatureItemProps> = ({
             id={feature.id}
             className={cardClassName}
             progress={progress}
-            statusColor={statusColor}
+            bgColor={bgColor}
           >
             {children ?? (
               <p className="flex-1 truncate text-xs">{feature.name}</p>
@@ -1044,33 +1043,50 @@ export const GanttFeatureList: FC<GanttFeatureListProps> = ({
 export const GanttMarker: FC<
   GanttMarkerProps & {
     onRemove?: (id: string) => void;
+    onEdit?: (id: string) => void;
     className?: string;
   }
-> = ({ label, date, id, onRemove, className }) => {
+> = ({ label, date, id, onRemove, onEdit, className }) => {
   const gantt = useContext(GanttContext);
   const differenceIn = getDifferenceIn(gantt.range);
   const timelineStartDate = new Date(gantt.timelineData.at(0)?.year ?? 0, 0, 1);
-  const offset = differenceIn(date, timelineStartDate);
-  const innerOffset = calculateInnerOffset(
-    date,
-    gantt.range,
-    (gantt.columnWidth * gantt.zoom) / 100
-  );
+
+  let position;
+
+  if (gantt.range === "daily") {
+    const diffDays = differenceInDays(date, timelineStartDate);
+    const columnWidth = (gantt.columnWidth * gantt.zoom) / 100;
+    position = diffDays * columnWidth;
+  } else {
+    const offset = differenceIn(date, timelineStartDate);
+    const innerOffset = calculateInnerOffset(
+      date,
+      gantt.range,
+      (gantt.columnWidth * gantt.zoom) / 100
+    );
+    position = `calc(var(--gantt-column-width) * ${offset} + ${innerOffset}px)`;
+  }
+
   const handleRemove = () => onRemove?.(id);
+  const handleEdit = () => onEdit?.(id);
 
   return (
     <div
-      className="pointer-events-none absolute top-0 left-0 z-20 flex h-full select-none flex-col items-center justify-center overflow-visible"
+      className="pointer-events-none absolute top-0 left-0 z-20 hover:z-30 flex h-full select-none flex-col items-center justify-center overflow-visible"
       style={{
         width: 0,
-        transform: `translateX(calc(var(--gantt-column-width) * ${offset} + ${innerOffset}px))`,
+        transform:
+          gantt.range === "daily"
+            ? `translateX(${position}px)`
+            : `translateX(${position})`,
       }}
     >
       <ContextMenu>
         <ContextMenuTrigger asChild>
           <div
             className={cn(
-              "group pointer-events-auto sticky top-0 flex select-auto flex-col flex-nowrap items-center justify-center whitespace-nowrap rounded-b-md bg-card px-2 py-1 text-foreground text-xs",
+              "group pointer-events-auto sticky top-0 flex select-auto flex-col flex-nowrap items-center justify-center whitespace-nowrap rounded-b-md bg-card px-2 py-1 text-foreground text-xs transition-all duration-200",
+              "hover:shadow-md",
               className
             )}
           >
@@ -1081,13 +1097,22 @@ export const GanttMarker: FC<
           </div>
         </ContextMenuTrigger>
         <ContextMenuContent>
+          {onEdit ? (
+            <ContextMenuItem
+              className="flex items-center gap-2"
+              onClick={handleEdit}
+            >
+              <PencilIcon size={16} />
+              Edit milestone
+            </ContextMenuItem>
+          ) : null}
           {onRemove ? (
             <ContextMenuItem
               className="flex items-center gap-2 text-destructive"
               onClick={handleRemove}
             >
               <TrashIcon size={16} />
-              Remove marker
+              Remove milestone
             </ContextMenuItem>
           ) : null}
         </ContextMenuContent>
@@ -1314,24 +1339,38 @@ export const GanttToday: FC<GanttTodayProps> = ({ className }) => {
   const gantt = useContext(GanttContext);
   const differenceIn = getDifferenceIn(gantt.range);
   const timelineStartDate = new Date(gantt.timelineData.at(0)?.year ?? 0, 0, 1);
-  const offset = differenceIn(date, timelineStartDate);
-  const innerOffset = calculateInnerOffset(
-    date,
-    gantt.range,
-    (gantt.columnWidth * gantt.zoom) / 100
-  );
+
+  let position;
+
+  if (gantt.range === "daily") {
+    const diffDays = differenceInDays(date, timelineStartDate);
+    const columnWidth = (gantt.columnWidth * gantt.zoom) / 100;
+    position = diffDays * columnWidth;
+  } else {
+    const offset = differenceIn(date, timelineStartDate);
+    const innerOffset = calculateInnerOffset(
+      date,
+      gantt.range,
+      (gantt.columnWidth * gantt.zoom) / 100
+    );
+    position = `calc(var(--gantt-column-width) * ${offset} + ${innerOffset}px)`;
+  }
 
   return (
     <div
       className="pointer-events-none absolute top-0 left-0 z-20 flex h-full select-none flex-col items-center justify-center overflow-visible"
       style={{
         width: 0,
-        transform: `translateX(calc(var(--gantt-column-width) * ${offset} + ${innerOffset}px))`,
+        transform:
+          gantt.range === "daily"
+            ? `translateX(${position}px)`
+            : `translateX(${position})`,
       }}
     >
       <div
         className={cn(
-          "group pointer-events-auto sticky top-0 flex select-auto flex-col flex-nowrap items-center justify-center whitespace-nowrap rounded-b-md bg-card px-2 py-1 text-foreground text-xs",
+          "group pointer-events-auto sticky top-0 flex select-auto flex-col flex-nowrap items-center justify-center whitespace-nowrap rounded-b-md bg-card px-2 py-1 text-foreground text-xs transition-all duration-200",
+          "hover:shadow-md",
           className
         )}
       >
