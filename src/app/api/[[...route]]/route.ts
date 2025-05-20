@@ -8,6 +8,7 @@ import projects from "@/features/projects/server/route";
 import projectMembers from "@/features/members/project/server/route";
 import tasks from "@/features/tasks/server/route";
 import histories from "@/features/histories/server/route";
+import milestones from "@/features/milestones/server/route";
 import adminUsers from "@/features/users/server/admin/route";
 import adminWorkspaces from "@/features/workspaces/server/admin/route";
 import adminWorkspaceMembers from "@/features/members/workspace/server/admin/route";
@@ -23,6 +24,7 @@ const app = new Hono()
   .route("/members/project", projectMembers)
   .route("/tasks", tasks)
   .route("/histories", histories)
+  .route("/milestones", milestones)
   .route("/admin/users", adminUsers)
   .route("/admin/workspaces", adminWorkspaces)
   .route("/admin/members/workspace", adminWorkspaceMembers)

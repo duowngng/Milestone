@@ -1,9 +1,15 @@
-import { useQueryState, parseAsBoolean, parseAsStringEnum } from "nuqs";
+import {
+  useQueryState,
+  parseAsBoolean,
+  parseAsStringEnum,
+  parseAsIsoDateTime,
+} from "nuqs";
 import { TaskStatus } from "../types";
 
 interface OpenTaskModalOptions {
   status?: TaskStatus;
   projectId?: string;
+  startDate?: Date;
 }
 
 export const useCreateTaskModal = () => {
@@ -17,14 +23,22 @@ export const useCreateTaskModal = () => {
   );
   const [initialProjectId, setInitialProjectId] = useQueryState("projectId");
 
+  const [initialStartDate, setInitialStartDate] = useQueryState(
+    "initialStartDate",
+    parseAsIsoDateTime
+  );
+
   const open = (options: OpenTaskModalOptions = {}) => {
-    const { status, projectId } = options;
+    const { status, projectId, startDate } = options;
 
     if (status !== undefined) {
       setInitialStatus(status);
     }
     if (projectId) {
       setInitialProjectId(projectId);
+    }
+    if (startDate) {
+      setInitialStartDate(startDate);
     }
     setIsOpen(true);
   };
@@ -33,6 +47,7 @@ export const useCreateTaskModal = () => {
     setIsOpen(false);
     setInitialStatus(null);
     setInitialProjectId(null);
+    setInitialStartDate(null);
   };
 
   return {
@@ -42,5 +57,6 @@ export const useCreateTaskModal = () => {
     setIsOpen,
     initialStatus,
     initialProjectId,
+    initialStartDate,
   };
 };

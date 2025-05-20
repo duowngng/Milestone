@@ -6,6 +6,8 @@ import { createAdminClient } from "@/lib/appwrite";
 import { isEqual } from "date-fns";
 
 import { getWorkspaceMember } from "@/features/members/workspace/utils";
+import { getProjectMember } from "@/features/members/project/utils";
+import { MemberRole } from "@/features/members/types";
 import { Project } from "@/features/projects/types";
 
 import {
@@ -175,9 +177,9 @@ const app = new Hono()
       taskId
     );
 
-    const currentMember = await getWorkspaceMember({
+    const currentMember = await getProjectMember({
       databases,
-      workspaceId: task.workspaceId,
+      projectId: task.projectId,
       userId: currentUser.$id,
     });
 
@@ -233,9 +235,9 @@ const app = new Hono()
         description,
       } = c.req.valid("json");
 
-      const member = await getWorkspaceMember({
+      const member = await getProjectMember({
         databases,
-        workspaceId,
+        projectId,
         userId: user.$id,
       });
 
@@ -307,9 +309,9 @@ const app = new Hono()
         taskId
       );
 
-      const member = await getWorkspaceMember({
+      const member = await getProjectMember({
         databases,
-        workspaceId: existingTask.workspaceId,
+        projectId: existingTask.projectId,
         userId: user.$id,
       });
 
@@ -430,13 +432,13 @@ const app = new Hono()
       taskId
     );
 
-    const member = await getWorkspaceMember({
+    const member = await getProjectMember({
       databases,
-      workspaceId: task.workspaceId,
+      projectId: task.projectId,
       userId: user.$id,
     });
 
-    if (!member) {
+    if (!member || member.role !== MemberRole.MANAGER) {
       return c.json({ error: "Unauthorized" }, 401);
     }
 

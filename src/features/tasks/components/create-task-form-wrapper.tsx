@@ -13,12 +13,14 @@ interface CreateTaskFormWrapperProps {
   onCancel: () => void;
   initialStatus?: TaskStatus;
   initialProjectId?: string;
+  initialStartDate?: Date;
 }
 
 export const CreateTaskFormWrapper = ({
   onCancel,
   initialStatus,
   initialProjectId,
+  initialStartDate,
 }: CreateTaskFormWrapperProps) => {
   const workspaceId = useWorkspaceId();
 
@@ -60,6 +62,7 @@ export const CreateTaskFormWrapper = ({
         memberOptions={memberOptions ?? []}
         initialStatus={initialStatus}
         initialProjectId={initialProjectId}
+        initialStartDate={initialStartDate}
       />
     </div>
   );

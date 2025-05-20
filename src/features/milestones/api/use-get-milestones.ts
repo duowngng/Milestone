@@ -2,24 +2,29 @@ import { useQuery } from "@tanstack/react-query";
 
 import { client } from "@/lib/rpc";
 
-interface useGetProjectsProps {
+interface UseGetMilestonesProps {
   workspaceId: string;
+  projectId?: string;
   enabled?: boolean;
 }
 
-export const useGetProjects = ({
+export const useGetMilestones = ({
   workspaceId,
+  projectId,
   enabled = true,
-}: useGetProjectsProps) => {
+}: UseGetMilestonesProps) => {
   const query = useQuery({
-    queryKey: ["projects", workspaceId],
+    queryKey: ["milestones", workspaceId, projectId],
     queryFn: async () => {
-      const response = await client.api.projects.$get({
-        query: { workspaceId },
+      const response = await client.api.milestones.$get({
+        query: {
+          workspaceId,
+          ...(projectId && { projectId }),
+        },
       });
 
       if (!response.ok) {
-        throw new Error("Failed to fetch projects");
+        throw new Error("Failed to fetch milestones");
       }
 
       const { data } = await response.json();

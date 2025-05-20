@@ -8,6 +8,7 @@ import { WorkspaceMember } from "@/features/members/types";
 import { MemberAvatar } from "@/features/members/components/member-avatar";
 import { ProjectAvatar } from "@/features/projects/components/project-avatar";
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
+import { useProjectId } from "@/features/projects/hooks/use-project-id";
 
 import { cn } from "@/lib/utils";
 
@@ -41,6 +42,7 @@ export const EventCard = ({
   displayMode,
 }: EventCardProps) => {
   const workspaceId = useWorkspaceId();
+  const paramProjectId = useProjectId();
   const router = useRouter();
   const getProgressColor = (value: number): string => {
     if (value < 30) return "#f44336";
@@ -72,11 +74,18 @@ export const EventCard = ({
               <MemberAvatar name={assignee?.name} />
               <span>{assignee?.name}</span>
             </div>
-            <div className="size-1 rounded-full bg-neutral-300" />
-            <div className="flex items-center gap-x-1">
-              <ProjectAvatar name={project?.name} image={project?.imageUrl} />
-              <span>{project?.name}</span>
-            </div>
+            {!paramProjectId && (
+              <>
+                <div className="size-1 rounded-full bg-neutral-300" />
+                <div className="flex items-center gap-x-1">
+                  <ProjectAvatar
+                    name={project?.name}
+                    image={project?.imageUrl}
+                  />
+                  <span>{project?.name}</span>
+                </div>
+              </>
+            )}
             <div className="size-1 rounded-full bg-neutral-300" />
             <AnimatedCircularProgressBar
               value={progress}
@@ -93,8 +102,12 @@ export const EventCard = ({
         ) : (
           <div className="flex items-center gap-x-1">
             <MemberAvatar name={assignee?.name} />
-            <div className="size-1 rounded-full bg-neutral-300" />
-            <ProjectAvatar name={project?.name} image={project?.imageUrl} />
+            {!paramProjectId && (
+              <>
+                <div className="size-1 rounded-full bg-neutral-300" />
+                <ProjectAvatar name={project?.name} image={project?.imageUrl} />
+              </>
+            )}
             <div className="size-1 rounded-full bg-neutral-300" />
             <AnimatedCircularProgressBar
               value={progress}
