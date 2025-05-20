@@ -166,7 +166,11 @@ export const TaskViewSwitcher = ({
               />
             </TabsContent>
             <TabsContent value="calendar" className="mt-0 h-full pb-4">
-              <DataCalendar data={tasks?.documents ?? []} />
+              <DataCalendar
+                data={tasks?.documents ?? []}
+                milestones={milestones?.documents ?? []}
+                isAdmin={isUserWorkspaceManager || isUserProjectManager}
+              />
             </TabsContent>
             <TabsContent value="gantt" className="mt-0 h-full pb-4">
               <DataGantt
