@@ -64,14 +64,14 @@ export function MembersList({ members }: { members: AdminWorkspaceMember[] }) {
           <TableCell>
             <span className="text-sm">
               {member.$updatedAt
-                ? format(new Date(member.$createdAt), "MMM dd, yyyy HH:mm")
+                ? format(new Date(member.$createdAt), "PPp")
                 : "N/A"}
             </span>
           </TableCell>
           <TableCell>
             <span className="text-sm">
               {member.$updatedAt
-                ? format(new Date(member.$updatedAt), "MMM dd, yyyy HH:mm")
+                ? format(new Date(member.$updatedAt), "PPp")
                 : "N/A"}
             </span>
           </TableCell>

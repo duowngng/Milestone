@@ -122,7 +122,7 @@ export const columns: ColumnDef<AdminWorkspaceMember>[] = [
       return (
         <span className="text-sm">
           {row.original.$createdAt
-            ? format(new Date(row.original.$createdAt), "MMM dd, yyyy HH:mm")
+            ? format(new Date(row.original.$createdAt), "PPp")
             : "N/A"}
         </span>
       );
@@ -143,7 +143,7 @@ export const columns: ColumnDef<AdminWorkspaceMember>[] = [
       return (
         <span className="text-sm">
           {row.original.$updatedAt
-            ? format(new Date(row.original.$updatedAt), "MMM dd, yyyy HH:mm")
+            ? format(new Date(row.original.$updatedAt), "PPp")
             : "N/A"}
         </span>
       );

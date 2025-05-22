@@ -59,7 +59,7 @@ export const AdminProjectsClient = () => {
   );
 
   return (
-    <div className="h-full flex flex-col border rounded-lg p-4">
+    <div className="h-fit flex flex-col border rounded-lg p-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Projects ({projects?.total})</h1>
         <Button onClick={open} size="sm" className="w-full lg:w-auto">

@@ -11,14 +11,12 @@ import {
 } from "react-icons/go";
 import {
   FolderIcon as FolderOutline,
-  UserGroupIcon as UserGroupOutline,
   BuildingOfficeIcon as BuildingOfficeOutline,
   UserIcon as UserOutline,
 } from "@heroicons/react/24/outline";
 
 import {
   FolderIcon as FolderSolid,
-  UserGroupIcon as UserGroupSolid,
   BuildingOfficeIcon as BuildingOfficeSolid,
   UserIcon as UserSolid,
 } from "@heroicons/react/24/solid";
@@ -41,12 +39,6 @@ const routes = [
     href: "/workspaces",
     icon: BuildingOfficeOutline,
     activeIcon: BuildingOfficeSolid,
-  },
-  {
-    label: "Members",
-    href: "/members",
-    icon: UserGroupOutline,
-    activeIcon: UserGroupSolid,
   },
   {
     label: "Projects",
