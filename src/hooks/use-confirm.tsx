@@ -7,15 +7,17 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
+  CardTitle,
 } from "@/components/ui/card";
 
 export const useConfirm = (
   title: string,
   message: string,
   variant: ButtonProps["variant"] = "primary"
-) : [() => JSX.Element, () => Promise<unknown>] => {
-  const [promise, setPromise] = useState<{ resolve: (value: boolean) => void } | null>(null);
+): [() => JSX.Element, () => Promise<unknown>] => {
+  const [promise, setPromise] = useState<{
+    resolve: (value: boolean) => void;
+  } | null>(null);
 
   const confirm = () => {
     return new Promise((resolve) => {
@@ -39,22 +41,30 @@ export const useConfirm = (
 
   const ConfirmationDialog = () => (
     <ResponsiveModal open={promise !== null} onOpenChange={handleClose}>
-        <Card className="w-full h-full border-none shadow-none">
-          <CardContent className="pt-8">
-            <CardHeader className="p-0">
-              <CardTitle>{title}</CardTitle>
-              <CardDescription>{message}</CardDescription>
-            </CardHeader>
-            <div className="pt-4 w-full flex flex-col gap-y-2 lg:flex-row gap-x-2 items-center justify-end">
-              <Button onClick={handleCancel} variant="outline" className="w-full lg:w-auto">
-                Cancel
-              </Button>
-              <Button onClick={handleConfirm} variant={variant} className="w-full lg:w-auto">
-                Confirm
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+      <Card className="w-full h-full border-none shadow-none">
+        <CardContent className="pt-8">
+          <CardHeader className="p-0">
+            <CardTitle>{title}</CardTitle>
+            <CardDescription>{message}</CardDescription>
+          </CardHeader>
+          <div className="pt-4 w-full flex flex-col gap-y-2 lg:flex-row gap-x-2 items-center justify-end">
+            <Button
+              onClick={handleCancel}
+              variant="outline"
+              className="w-full lg:w-auto"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirm}
+              variant={variant}
+              className="w-full lg:w-auto"
+            >
+              Confirm
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </ResponsiveModal>
   );
 

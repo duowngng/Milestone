@@ -1,7 +1,78 @@
 "use client";
 
-import React from "react";
+import { Loader, PlusIcon } from "lucide-react";
+
+import { DataTable } from "@/features/tasks/components/admin/data-table";
+import { DataFilter } from "@/features/tasks/components/admin/data-filter";
+import { columns } from "@/features/tasks/components/admin/columns";
+import { DottedSeparator } from "@/components/dotted-separator";
+import { PageError } from "@/components/page-error";
+import { Button } from "@/components/ui/button";
+
+import { useGetAdminTasks } from "@/features/tasks/api/admin/use-get-admin-tasks";
+import { useAdminTaskFilters } from "@/features/tasks/hooks/admin/use-task-filters";
+import { useCreateTaskModal } from "@/features/tasks/hooks/use-create-task-modal";
 
 export const AdminTasksClient = () => {
-  return <div></div>;
+  const [
+    {
+      projectId,
+      assigneeId,
+      status,
+      priority,
+      name,
+      startDate,
+      dueDate,
+      progress,
+      createdAt,
+      updatedAt,
+    },
+  ] = useAdminTaskFilters();
+
+  const { data: tasks, isLoading } = useGetAdminTasks({
+    projectId,
+    assigneeId,
+    status,
+    priority,
+    name,
+    startDate,
+    dueDate,
+    progress,
+    createdAt,
+    updatedAt,
+  });
+
+  const { open } = useCreateTaskModal();
+
+  if (isLoading) {
+    return (
+      <div className="w-full border rounded-lg h-[200px] flex flex-col items-center justify-center">
+        <Loader className="size-5 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!tasks) {
+    return <PageError message="Failed to load tasks" />;
+  }
+
+  return (
+    <div className="h-fit flex flex-col border rounded-lg p-4">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Tasks ({tasks?.total})</h1>
+        <Button onClick={() => open()} size="sm" className="w-full lg:w-auto">
+          <PlusIcon className="size-4 mr-2" />
+          New
+        </Button>
+      </div>
+
+      <DottedSeparator className="my-4" />
+
+      <DataFilter />
+
+      <DottedSeparator className="my-4" />
+
+      <DataTable columns={columns} data={tasks.documents} />
+    </div>
+  );
 };

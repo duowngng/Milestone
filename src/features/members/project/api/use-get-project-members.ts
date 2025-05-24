@@ -3,8 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { client } from "@/lib/rpc";
 
 interface useGetProjectMembersProps {
-  projectId: string;
   workspaceId: string;
+  projectId?: string;
 }
 
 export const useGetProjectMembers = ({

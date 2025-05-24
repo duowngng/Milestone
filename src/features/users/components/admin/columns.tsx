@@ -125,7 +125,7 @@ export const columns: ColumnDef<User>[] = [
       return (
         <span className="text-sm">
           {row.original.accessedAt
-            ? format(new Date(row.original.accessedAt), "MMM dd, yyyy HH:mm")
+            ? format(new Date(row.original.accessedAt), "PPp")
             : "Never"}
         </span>
       );

@@ -16,6 +16,7 @@ import {
   WORKSPACE_MEMBERS_ID,
   PROJECTS_ID,
   TASKS_ID,
+  PROJECT_MEMBERS_ID,
 } from "@/config";
 import { sessionMiddleware } from "@/lib/session-middleware";
 
@@ -57,13 +58,13 @@ const app = new Hono()
         progress,
       } = c.req.valid("query");
 
-      const member = await getWorkspaceMember({
+      const workspaceMember = await getWorkspaceMember({
         databases,
         workspaceId,
         userId: user.$id,
       });
 
-      if (!member) {
+      if (!workspaceMember) {
         return c.json({ error: "Unauthorized" }, 401);
       }
 
@@ -72,8 +73,33 @@ const app = new Hono()
         Query.orderDesc("$createdAt"),
       ];
 
-      if (projectId) {
-        query.push(Query.equal("projectId", projectId));
+      if (workspaceMember.role === MemberRole.MANAGER) {
+        if (projectId) {
+          query.push(Query.equal("projectId", projectId));
+        }
+      } else {
+        const projectMembers = await databases.listDocuments(
+          DATABASE_ID,
+          PROJECT_MEMBERS_ID,
+          [Query.equal("userId", user.$id)]
+        );
+
+        const userProjectIds = projectMembers.documents.map(
+          (pm) => pm.projectId
+        );
+
+        if (userProjectIds.length === 0) {
+          return c.json({ data: { documents: [], total: 0 } });
+        }
+
+        if (projectId) {
+          if (!userProjectIds.includes(projectId)) {
+            return c.json({ error: "Unauthorized" }, 401);
+          }
+          query.push(Query.equal("projectId", projectId));
+        } else {
+          query.push(Query.equal("projectId", userProjectIds));
+        }
       }
 
       if (status) {
