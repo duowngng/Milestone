@@ -1,22 +1,38 @@
 import { Models } from "node-appwrite";
 
 export enum MemberRole {
-  ADMIN = "ADMIN",
+  MANAGER = "MANAGER",
   MEMBER = "MEMBER",
 }
 
-export type Member = Models.Document & {
+export type WorkspaceMember = Models.Document & {
   workspaceId: string;
   userId: string;
   role: MemberRole;
 };
 
-export type AdminMember = Member & {
+export type AdminWorkspaceMember = WorkspaceMember & {
   user: {
     name: string;
     email: string;
   };
   workspace: {
+    name: string;
+  };
+};
+
+export type ProjectMember = Models.Document & {
+  projectId: string;
+  userId: string;
+  role: MemberRole;
+};
+
+export type AdminProjectMember = ProjectMember & {
+  user: {
+    name: string;
+    email: string;
+  };
+  project: {
     name: string;
   };
 };

@@ -6,8 +6,10 @@ import { PlusIcon, CalendarIcon, SettingsIcon } from "lucide-react";
 
 import { Task } from "@/features/tasks/types";
 import { Project } from "@/features/projects/types";
-import { Member } from "@/features/members/types";
-import { useGetMembers } from "@/features/members/api/use-get-members";
+import { WorkspaceMember } from "@/features/members/types";
+import { useGetMembers } from "@/features/members/workspace/api/use-get-members";
+import { useGetCurrentMember } from "@/features/members/workspace/api/use-get-current-member";
+import { isWorkspaceManager } from "@/features/members/workspace/utils";
 import { useGetProjects } from "@/features/projects/api/use-get-projects";
 import { useGetTasks } from "@/features/tasks/api/use-get-tasks";
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
@@ -38,12 +40,20 @@ export const WorkspaceIdClient = () => {
   const { data: members, isLoading: isLoadingMembers } = useGetMembers({
     workspaceId,
   });
+  const { data: currentMember, isLoading: isLoadingMember } =
+    useGetCurrentMember({
+      workspaceId,
+      enabled: !!workspaceId,
+    });
+
+  const isManager = currentMember ? isWorkspaceManager(currentMember) : false;
 
   const isLoading =
     isLoadingAnalytics ||
     isLoadingTasks ||
     isLoadingProjects ||
-    isLoadingMembers;
+    isLoadingMembers ||
+    isLoadingMember;
 
   if (isLoading) {
     return <PageLoader />;
@@ -57,8 +67,16 @@ export const WorkspaceIdClient = () => {
     <div className="h-full flex flex-col space-y-4">
       <Analytics data={analytics} />
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        <TaskList data={tasks.documents} total={tasks.total} />
-        <ProjectList data={projects.documents} total={projects.total} />
+        <TaskList
+          data={tasks.documents}
+          total={tasks.total}
+          canCreateTask={projects.total > 0}
+        />
+        <ProjectList
+          data={projects.documents}
+          total={projects.total}
+          isManager={isManager}
+        />
         <MemberList data={members.documents} total={members.total} />
       </div>
     </div>
@@ -68,9 +86,10 @@ export const WorkspaceIdClient = () => {
 interface TaskListProps {
   data: Task[];
   total: number;
+  canCreateTask: boolean;
 }
 
-export const TaskList = ({ data, total }: TaskListProps) => {
+export const TaskList = ({ data, total, canCreateTask }: TaskListProps) => {
   const workspaceId = useWorkspaceId();
   const { open: createTask } = useCreateTaskModal();
 
@@ -79,9 +98,11 @@ export const TaskList = ({ data, total }: TaskListProps) => {
       <div className="bg-muted rounded-lg p-4">
         <div className="flex items-center justify-between">
           <p className="text-lg font-semibold">Tasks ({total})</p>
-          <Button onClick={() => createTask()} variant="muted" size="icon">
-            <PlusIcon className="size-4 text-neutral-400" />
-          </Button>
+          {canCreateTask && (
+            <Button onClick={() => createTask()} variant="muted" size="icon">
+              <PlusIcon className="size-4 text-neutral-400" />
+            </Button>
+          )}
         </div>
         <DottedSeparator className="my-4" />
         <ul className="flex flex-col gap-y-4">
@@ -106,13 +127,15 @@ export const TaskList = ({ data, total }: TaskListProps) => {
               </Link>
             </li>
           ))}
-          <li className=" text-sm text-muted-foreground text-center hidden first-of-type:block">
+          <li className="text-sm text-muted-foreground text-center hidden first-of-type:block">
             No task found
           </li>
         </ul>
-        <Button variant="muted" className="mt-4 w-full" asChild>
-          <Link href={`/workspaces/${workspaceId}/tasks`}>Show all</Link>
-        </Button>
+        {total > 0 && (
+          <Button variant="muted" className="mt-4 w-full" asChild>
+            <Link href={`/workspaces/${workspaceId}/tasks`}>Show all</Link>
+          </Button>
+        )}
       </div>
     </div>
   );
@@ -121,9 +144,10 @@ export const TaskList = ({ data, total }: TaskListProps) => {
 interface ProjectListProps {
   data: Project[];
   total: number;
+  isManager: boolean;
 }
 
-export const ProjectList = ({ data, total }: ProjectListProps) => {
+export const ProjectList = ({ data, total, isManager }: ProjectListProps) => {
   const workspaceId = useWorkspaceId();
   const { open: createProject } = useCreateProjectModal();
 
@@ -132,13 +156,15 @@ export const ProjectList = ({ data, total }: ProjectListProps) => {
       <div className="bg-white border rounded-lg p-4">
         <div className="flex items-center justify-between">
           <p className="text-lg font-semibold">Projects ({total})</p>
-          <Button
-            onClick={() => createProject()}
-            variant="secondary"
-            size="icon"
-          >
-            <PlusIcon className="size-4 text-neutral-400" />
-          </Button>
+          {isManager && (
+            <Button
+              onClick={() => createProject()}
+              variant="secondary"
+              size="icon"
+            >
+              <PlusIcon className="size-4 text-neutral-400" />
+            </Button>
+          )}
         </div>
         <DottedSeparator className="my-4" />
         <ul className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -161,7 +187,7 @@ export const ProjectList = ({ data, total }: ProjectListProps) => {
               </Link>
             </li>
           ))}
-          <li className=" text-sm text-muted-foreground text-center hidden first-of-type:block">
+          <li className="col-span-2 text-sm text-muted-foreground text-center hidden first-of-type:block">
             No project found
           </li>
         </ul>
@@ -171,7 +197,7 @@ export const ProjectList = ({ data, total }: ProjectListProps) => {
 };
 
 interface MemberListProps {
-  data: Member[];
+  data: WorkspaceMember[];
   total: number;
 }
 

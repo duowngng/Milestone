@@ -5,19 +5,31 @@ import { zValidator } from "@hono/zod-validator";
 import { endOfMonth, startOfMonth, subMonths } from "date-fns";
 
 import { sessionMiddleware } from "@/lib/session-middleware";
-import { DATABASE_ID, IMAGES_BUCKET_ID, PROJECTS_ID, TASKS_ID } from "@/config";
-import { getMember } from "@/features/members/utils";
+import {
+  DATABASE_ID,
+  IMAGES_BUCKET_ID,
+  PROJECT_MEMBERS_ID,
+  PROJECTS_ID,
+  TASKS_ID,
+} from "@/config";
+import { getWorkspaceMember } from "@/features/members/workspace/utils";
 import { MemberRole } from "@/features/members/types";
 import { TaskStatus } from "@/features/tasks/types";
 
 import { createProjectSchema, updateProjectSchema } from "../schemas";
 import { Project } from "../types";
+import { getProjectMember } from "@/features/members/project/utils";
 
 const app = new Hono()
   .get(
     "/",
     sessionMiddleware,
-    zValidator("query", z.object({ workspaceId: z.string() })),
+    zValidator(
+      "query",
+      z.object({
+        workspaceId: z.string(),
+      })
+    ),
     async (c) => {
       const user = c.get("user");
       const databases = c.get("databases");
@@ -28,7 +40,7 @@ const app = new Hono()
         return c.json({ message: "Missing workspaceId" }, 400);
       }
 
-      const member = await getMember({
+      const member = await getWorkspaceMember({
         databases,
         workspaceId,
         userId: user.$id,
@@ -36,6 +48,31 @@ const app = new Hono()
 
       if (!member) {
         return c.json({ message: "Unauthorized" }, 401);
+      }
+
+      if (member.role !== MemberRole.MANAGER) {
+        const projectMembers = await databases.listDocuments(
+          DATABASE_ID,
+          PROJECT_MEMBERS_ID,
+          [Query.equal("userId", user.$id)]
+        );
+
+        const projectIds = projectMembers.documents.map((pm) => pm.projectId);
+
+        if (projectIds.length === 0) {
+          return c.json({ data: { documents: [], total: 0 } });
+        }
+
+        const projects = await databases.listDocuments<Project>(
+          DATABASE_ID,
+          PROJECTS_ID,
+          [
+            Query.equal("workspaceId", workspaceId),
+            Query.equal("$id", projectIds),
+          ]
+        );
+
+        return c.json({ data: projects });
       }
 
       const projects = await databases.listDocuments<Project>(
@@ -58,14 +95,26 @@ const app = new Hono()
       projectId
     );
 
-    const member = await getMember({
+    const workspaceMember = await getWorkspaceMember({
       databases,
       workspaceId: project.workspaceId,
       userId: user.$id,
     });
 
-    if (!member) {
+    if (!workspaceMember) {
       return c.json({ message: "Unauthorized" }, 401);
+    }
+
+    if (workspaceMember.role !== MemberRole.MANAGER) {
+      const projectMember = await getProjectMember({
+        databases,
+        projectId,
+        userId: user.$id,
+      });
+
+      if (!projectMember) {
+        return c.json({ message: "Unauthorized" }, 401);
+      }
     }
 
     return c.json({ data: project });
@@ -81,13 +130,13 @@ const app = new Hono()
 
       const { name, image, workspaceId } = c.req.valid("form");
 
-      const member = await getMember({
+      const member = await getWorkspaceMember({
         databases,
         workspaceId,
         userId: user.$id,
       });
 
-      if (!member) {
+      if (!member || member.role !== MemberRole.MANAGER) {
         return c.json({ message: "Unauthorized" }, 401);
       }
 
@@ -136,19 +185,13 @@ const app = new Hono()
       const { projectId } = c.req.param();
       const { name, image } = c.req.valid("form");
 
-      const existingProject = await databases.getDocument<Project>(
-        DATABASE_ID,
-        PROJECTS_ID,
-        projectId
-      );
-
-      const member = await getMember({
+      const member = await getProjectMember({
         databases,
-        workspaceId: existingProject.workspaceId,
+        projectId,
         userId: user.$id,
       });
 
-      if (!member) {
+      if (!member || member.role !== MemberRole.MANAGER) {
         return c.json({ error: "Unauthorized" }, 401);
       }
 
@@ -192,23 +235,23 @@ const app = new Hono()
 
     const { projectId } = c.req.param();
 
-    const existingProject = await databases.getDocument<Project>(
-      DATABASE_ID,
-      PROJECTS_ID,
-      projectId
-    );
-
-    const member = await getMember({
+    const member = await getProjectMember({
       databases,
-      workspaceId: existingProject.workspaceId,
+      projectId,
       userId: user.$id,
     });
 
-    if (!member || member.role !== MemberRole.ADMIN) {
+    if (!member || member.role !== MemberRole.MANAGER) {
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    // TODO: Delete tasks
+    const tasks = await databases.listDocuments(DATABASE_ID, TASKS_ID, [
+      Query.equal("projectId", projectId),
+    ]);
+
+    for (const task of tasks.documents) {
+      await databases.deleteDocument(DATABASE_ID, TASKS_ID, task.$id);
+    }
 
     await databases.deleteDocument(DATABASE_ID, PROJECTS_ID, projectId);
 
@@ -225,7 +268,7 @@ const app = new Hono()
       projectId
     );
 
-    const member = await getMember({
+    const member = await getWorkspaceMember({
       databases,
       workspaceId: project.workspaceId,
       userId: user.$id,
@@ -246,8 +289,8 @@ const app = new Hono()
       TASKS_ID,
       [
         Query.equal("projectId", projectId),
-        Query.greaterThanEqual("$createdAt", thisMonthStart.toISOString()),
-        Query.lessThanEqual("$createdAt", thisMonthEnd.toISOString()),
+        Query.greaterThanEqual("startDate", thisMonthStart.toISOString()),
+        Query.lessThanEqual("startDate", thisMonthEnd.toISOString()),
       ]
     );
 
@@ -256,8 +299,8 @@ const app = new Hono()
       TASKS_ID,
       [
         Query.equal("projectId", projectId),
-        Query.greaterThanEqual("$createdAt", lastMonthStart.toISOString()),
-        Query.lessThanEqual("$createdAt", lastMonthEnd.toISOString()),
+        Query.greaterThanEqual("startDate", lastMonthStart.toISOString()),
+        Query.lessThanEqual("startDate", lastMonthEnd.toISOString()),
       ]
     );
 

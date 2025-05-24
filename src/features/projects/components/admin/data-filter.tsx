@@ -68,11 +68,11 @@ export const DataFilter = () => {
           <SelectTrigger className="w-full lg:w-auto h-8">
             <div className="flex items-center pr-2">
               <BuildingIcon className="size-4 mr-2" />
-              <SelectValue placeholder="All workspaces" />
+              <SelectValue placeholder="Workspace" />
             </div>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All workspaces</SelectItem>
+            <SelectItem value="all">Workspace</SelectItem>
             <SelectSeparator />
             {workspaceOptions?.map((workspace) => (
               <SelectItem key={workspace.value} value={workspace.value}>

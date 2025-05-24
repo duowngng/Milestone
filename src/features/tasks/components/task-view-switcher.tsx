@@ -8,14 +8,20 @@ import { Button } from "@/components/ui/button";
 import { DottedSeparator } from "@/components/dotted-separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
+import { useProjectId } from "@/features/projects/hooks/use-project-id";
+import { useGetCurrentMember } from "@/features/members/workspace/api/use-get-current-member";
+import { isWorkspaceManager } from "@/features/members/workspace/utils";
+import { useGetCurrentProjectMember } from "@/features/members/project/api/use-get-current-project-member";
+import { isProjectManager } from "@/features/members/project/utils";
+import { useGetMilestones } from "@/features/milestones/api/use-get-milestones";
+
 import { DataFilter } from "./data-filter";
 import { columns } from "./table/columns";
 import { DataTable } from "./table/data-table";
 import { DataKanban } from "./kanban/data-kanban";
 import { DataCalendar } from "./calendar/data.calendar";
-
-import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
-import { useProjectId } from "@/features/projects/hooks/use-project-id";
+import { DataGantt } from "./gantt/data-gantt";
 
 import { useCreateTaskModal } from "../hooks/use-create-task-modal";
 import { useGetTasks } from "../api/use-get-tasks";
@@ -32,7 +38,18 @@ export const TaskViewSwitcher = ({
   hideProjectFilter,
   memberId,
 }: TaskViewSwitcherProps) => {
-  const [{ projectId, status, assigneeId, search, dueDate }] = useTaskFilters();
+  const [
+    {
+      projectId,
+      status,
+      priority,
+      assigneeId,
+      search,
+      startDate,
+      dueDate,
+      progress,
+    },
+  ] = useTaskFilters();
   const [view, setView] = useQueryState("task-view", {
     defaultValue: "table",
   });
@@ -41,15 +58,44 @@ export const TaskViewSwitcher = ({
   const paramProjectId = useProjectId();
   const { open } = useCreateTaskModal();
 
+  const { data: workspaceMember } = useGetCurrentMember({
+    workspaceId,
+    enabled: !!workspaceId,
+  });
+
+  const { data: projectMember } = useGetCurrentProjectMember({
+    projectId: paramProjectId,
+    workspaceId,
+    enabled: !!paramProjectId && !!workspaceId,
+  });
+
+  const isUserWorkspaceManager = workspaceMember
+    ? isWorkspaceManager(workspaceMember)
+    : false;
+  const isUserProjectManager = projectMember
+    ? isProjectManager(projectMember)
+    : false;
+
   const { mutate: bulkUpdate } = useBulkUpdateTask();
+
+  const { data: milestones, isLoading: isLoadingMilestones } = useGetMilestones(
+    {
+      workspaceId,
+      projectId: projectId || paramProjectId,
+      enabled: !!workspaceId,
+    }
+  );
 
   const { data: tasks, isLoading: isLoadingTasks } = useGetTasks({
     workspaceId,
-    projectId: paramProjectId || projectId,
+    projectId: projectId || paramProjectId,
     status,
+    priority,
     assigneeId,
     search,
+    startDate,
     dueDate,
+    progress,
   });
 
   const onKanbanChange = useCallback(
@@ -60,6 +106,8 @@ export const TaskViewSwitcher = ({
     },
     [bulkUpdate]
   );
+
+  const isLoading = isLoadingTasks || isLoadingMilestones;
 
   return (
     <Tabs
@@ -79,6 +127,9 @@ export const TaskViewSwitcher = ({
             <TabsTrigger className="h-8 w-full lg:w-auto" value="calendar">
               Calendar
             </TabsTrigger>
+            <TabsTrigger className="h-8 w-full lg:w-auto" value="gantt">
+              Timeline
+            </TabsTrigger>
           </TabsList>
           <Button
             onClick={() => open({ projectId: paramProjectId })}
@@ -90,16 +141,23 @@ export const TaskViewSwitcher = ({
           </Button>
         </div>
         <DottedSeparator className="my-4" />
-        <DataFilter hideProjectFilter={hideProjectFilter} memberId={memberId} />
+        <DataFilter
+          hideProjectFilter={hideProjectFilter}
+          memberId={memberId}
+          isAdmin={isUserProjectManager || isUserWorkspaceManager}
+        />
         <DottedSeparator className="my-4" />
-        {isLoadingTasks ? (
+        {isLoading ? (
           <div className="w-full border rounded-lg h-[200px] flex flex-col items-center justify-center">
             <Loader className="size-5 animate-spin text-muted-foreground" />
           </div>
         ) : (
           <>
             <TabsContent value="table" className="mt-0">
-              <DataTable columns={columns} data={tasks?.documents ?? []} />
+              <DataTable
+                columns={columns(isUserProjectManager)}
+                data={tasks?.documents ?? []}
+              />
             </TabsContent>
             <TabsContent value="kanban" className="mt-0">
               <DataKanban
@@ -108,7 +166,18 @@ export const TaskViewSwitcher = ({
               />
             </TabsContent>
             <TabsContent value="calendar" className="mt-0 h-full pb-4">
-              <DataCalendar data={tasks?.documents ?? []} />
+              <DataCalendar
+                data={tasks?.documents ?? []}
+                milestones={milestones?.documents ?? []}
+                isAdmin={isUserWorkspaceManager || isUserProjectManager}
+              />
+            </TabsContent>
+            <TabsContent value="gantt" className="mt-0 h-full pb-4">
+              <DataGantt
+                data={tasks?.documents ?? []}
+                isManager={isUserProjectManager}
+                milestones={milestones?.documents ?? []}
+              />
             </TabsContent>
           </>
         )}

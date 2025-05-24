@@ -11,6 +11,6 @@ const WorkspaceIdPage = async () => {
   }
 
   return <WorkspaceIdClient />;
-}
+};
 
 export default WorkspaceIdPage;

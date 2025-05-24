@@ -4,7 +4,14 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, CopyIcon, MoreVertical } from "lucide-react";
+import {
+  ArrowUpDown,
+  ChevronDown,
+  ChevronRight,
+  CopyIcon,
+  MoreVertical,
+  Users,
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -84,6 +91,41 @@ export const columns: ColumnDef<AdminProject>[] = [
     },
   },
   {
+    accessorKey: "members",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        Members
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
+    cell: ({ row }) => {
+      const project = row.original;
+      const memberCount = project.members?.length || 0;
+      const isOpen = project._isOpen;
+
+      return (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <Users className="size-3.5 mr-2" />
+            <span>
+              {memberCount} Member{memberCount !== 1 && "s"}
+            </span>
+          </div>
+          <div className="mr-4">
+            {isOpen ? (
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            ) : (
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            )}
+          </div>
+        </div>
+      );
+    },
+  },
+  {
     accessorKey: "$createdAt",
     header: ({ column }) => (
       <Button
@@ -98,7 +140,7 @@ export const columns: ColumnDef<AdminProject>[] = [
       return (
         <span className="text-sm">
           {row.original.$createdAt
-            ? format(new Date(row.original.$createdAt), "MMM dd, yyyy HH:mm")
+            ? format(new Date(row.original.$createdAt), "PPp")
             : "N/A"}
         </span>
       );
@@ -119,7 +161,7 @@ export const columns: ColumnDef<AdminProject>[] = [
       return (
         <span className="text-sm">
           {row.original.$updatedAt
-            ? format(new Date(row.original.$updatedAt), "MMM dd, yyyy HH:mm")
+            ? format(new Date(row.original.$updatedAt), "PPp")
             : "N/A"}
         </span>
       );

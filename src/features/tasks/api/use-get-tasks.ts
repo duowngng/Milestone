@@ -6,18 +6,24 @@ interface useGetTasksProps {
   workspaceId: string;
   projectId?: string | null;
   status?: string | null;
+  priority?: string | null;
   search?: string | null;
   assigneeId?: string | null;
+  startDate?: string | null;
   dueDate?: string | null;
+  progress?: string | null;
 }
 
 export const useGetTasks = ({
   workspaceId,
   projectId,
   status,
+  priority,
   search,
   assigneeId,
+  startDate,
   dueDate,
+  progress,
 }: useGetTasksProps) => {
   const query = useQuery({
     queryKey: [
@@ -25,9 +31,12 @@ export const useGetTasks = ({
       workspaceId,
       projectId,
       status,
+      priority,
       search,
       assigneeId,
+      startDate,
       dueDate,
+      progress,
     ],
     queryFn: async () => {
       const response = await client.api.tasks.$get({
@@ -35,9 +44,12 @@ export const useGetTasks = ({
           workspaceId,
           projectId: projectId ?? undefined,
           status: status ?? undefined,
+          priority: priority ?? undefined,
           search: search ?? undefined,
           assigneeId: assigneeId ?? undefined,
+          startDate: startDate ?? undefined,
           dueDate: dueDate ?? undefined,
+          progress: progress ?? undefined,
         },
       });
 
@@ -49,7 +61,7 @@ export const useGetTasks = ({
 
       return data;
     },
-});
+  });
 
   return query;
-}
+};

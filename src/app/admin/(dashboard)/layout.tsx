@@ -1,11 +1,12 @@
 import { CreateAdminWorkspaceModal } from "@/features/workspaces/components/admin/create-admin-workspace-modal";
-import { CreateAdminMemberModal } from "@/features/members/components/admin/create-admin-member-modal";
+import { CreateAdminMemberModal } from "@/features/members/workspace/components/admin/create-admin-member-modal";
 import { CreateAdminProjectModal } from "@/features/projects/components/admin/create-admin-project-modal";
-import { CreateTaskModal } from "@/features/tasks/components/create-task-modal";
+import { CreateAdminTaskModal } from "@/features/tasks/components/admin/create-admin-task-modal";
 import { EditAdminWorkspaceModal } from "@/features/workspaces/components/admin/edit-admin-workspace-modal";
-import { EditAdminMemberModal } from "@/features/members/components/admin/edit-admin-member-modal";
+import { EditAdminMemberModal } from "@/features/members/workspace/components/admin/edit-admin-member-modal";
 import { EditAdminProjectModal } from "@/features/projects/components/admin/edit-admin-project-modal";
-import { EditTaskModal } from "@/features/tasks/components/edit-task-modal";
+import { EditAdminProjectMemberModal } from "@/features/members/project/components/admin/edit-admin-member-modal";
+import { EditAdminTaskModal } from "@/features/tasks/components/admin/edit-admin-task-modal";
 
 import { Navbar } from "@/components/navbar";
 import { Sidebar } from "@/components/admin/sidebar";
@@ -20,11 +21,12 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       <CreateAdminWorkspaceModal />
       <CreateAdminMemberModal />
       <CreateAdminProjectModal />
-      <CreateTaskModal />
+      <CreateAdminTaskModal />
       <EditAdminWorkspaceModal />
       <EditAdminMemberModal />
       <EditAdminProjectModal />
-      <EditTaskModal />
+      <EditAdminProjectMemberModal />
+      <EditAdminTaskModal />
       <div className="flex w-full h-full">
         <div className="fixed left-0 top-0 hidden lg:block lg:w-[264px] h-full overflow-y-auto">
           <Sidebar />

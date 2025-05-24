@@ -12,37 +12,51 @@ import {
 } from "react-icons/go";
 
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
-
-const routes = [
-  {
-    label: "Home",
-    href: "",
-    icon: GoHome,
-    activeIcon: GoHomeFill,
-  },
-  {
-    label: "My Tasks",
-    href: "/tasks",
-    icon: GoCheckCircle,
-    activeIcon: GoCheckCircleFill,
-  },
-  {
-    label: "Settings",
-    href: "/settings",
-    icon: SettingsIcon,
-    activeIcon: SettingsIcon,
-  },
-  {
-    label: "Members",
-    href: "/members",
-    icon: UsersIcon,
-    activeIcon: UsersIcon,
-  },
-];
+import { useGetProjects } from "@/features/projects/api/use-get-projects";
 
 export const Navigation = () => {
   const pathname = usePathname();
   const workspaceId = useWorkspaceId();
+
+  const { data: projectsData } = useGetProjects({
+    workspaceId: workspaceId || "",
+    enabled: !!workspaceId,
+  });
+
+  const hasProjects = !!(
+    projectsData?.documents && projectsData.documents.length > 0
+  );
+
+  const routes = [
+    {
+      label: "Home",
+      href: "",
+      icon: GoHome,
+      activeIcon: GoHomeFill,
+    },
+    ...(hasProjects
+      ? [
+          {
+            label: "My Tasks",
+            href: "/tasks",
+            icon: GoCheckCircle,
+            activeIcon: GoCheckCircleFill,
+          },
+        ]
+      : []),
+    {
+      label: "Settings",
+      href: "/settings",
+      icon: SettingsIcon,
+      activeIcon: SettingsIcon,
+    },
+    {
+      label: "Members",
+      href: "/members",
+      icon: UsersIcon,
+      activeIcon: UsersIcon,
+    },
+  ];
 
   return (
     <ul className="flex flex-col">

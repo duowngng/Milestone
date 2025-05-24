@@ -2,17 +2,17 @@
 
 import { Loader, PlusIcon } from "lucide-react";
 
-import { DataTable } from "@/features/members/components/admin/data-table";
-import { DataFilter } from "@/features/members/components/admin/data-filter";
-import { columns } from "@/features/members/components/admin/columns";
-import { useCreateMemberModal } from "@/features/members/hooks/use-create-member-modal";
+import { DataTable } from "@/features/members/workspace/components/admin/data-table";
+import { DataFilter } from "@/features/members/workspace/components/admin/data-filter";
+import { columns } from "@/features/members/workspace/components/admin/columns";
+import { useCreateMemberModal } from "@/features/members/workspace/hooks/use-create-member-modal";
 import { DottedSeparator } from "@/components/dotted-separator";
 import { PageError } from "@/components/page-error";
 import { Button } from "@/components/ui/button";
 
-import { AdminMember } from "@/features/members/types";
-import { useGetMembers } from "@/features/members/api/admin/use-get-admin-members";
-import { useMemberFilters } from "@/features/members/hooks/admin/use-member-filters";
+import { AdminWorkspaceMember } from "@/features/members/types";
+import { useGetMembers } from "@/features/members/workspace/api/admin/use-get-admin-members";
+import { useMemberFilters } from "@/features/members/workspace/hooks/admin/use-member-filters";
 
 export const AdminMembersClient = () => {
   const [{ userId, workspaceId, role, createdAt, updatedAt }] =
@@ -55,7 +55,10 @@ export const AdminMembersClient = () => {
 
       <DottedSeparator className="my-4" />
 
-      <DataTable columns={columns} data={data.documents as AdminMember[]} />
+      <DataTable
+        columns={columns}
+        data={data.documents as AdminWorkspaceMember[]}
+      />
     </div>
   );
 };

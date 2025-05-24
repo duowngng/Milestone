@@ -25,12 +25,19 @@ import {
 
 import { Button } from "@/components/ui/button";
 
+import { MembersList } from "./members-list";
+import { AdminWorkspace } from "../../types";
+
+interface WithId {
+  $id: string;
+}
+
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
 }
 
-export function DataTable<TData, TValue>({
+export function DataTable<TData extends WithId, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
@@ -38,9 +45,26 @@ export function DataTable<TData, TValue>({
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   );
+  const [openRowIds, setOpenRowIds] = React.useState<Record<string, boolean>>(
+    {}
+  );
+
+  const toggleRow = (id: string) => {
+    setOpenRowIds((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
+  const processedData = React.useMemo(() => {
+    return data.map((item: TData) => ({
+      ...item,
+      _isOpen: openRowIds[item.$id] || false,
+    }));
+  }, [data, openRowIds]);
 
   const table = useReactTable({
-    data,
+    data: processedData,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -61,38 +85,44 @@ export function DataTable<TData, TValue>({
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  );
-                })}
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
+                ))}
               </TableRow>
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
+            {table.getRowModel().rows.length ? (
+              table.getRowModel().rows.map((row) => {
+                const workspace = row.original as unknown as AdminWorkspace;
+                const isOpen = openRowIds[workspace.$id] || false;
+
+                return (
+                  <React.Fragment key={row.id}>
+                    <TableRow
+                      onClick={() => toggleRow(workspace.$id)}
+                      className="cursor-pointer hover:bg-muted/50"
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                    {isOpen && <MembersList members={workspace.members} />}
+                  </React.Fragment>
+                );
+              })
             ) : (
               <TableRow>
                 <TableCell

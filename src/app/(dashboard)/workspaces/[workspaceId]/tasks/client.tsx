@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation";
 
 import { TaskViewSwitcher } from "@/features/tasks/components/task-view-switcher";
-import { useGetMembers } from "@/features/members/api/use-get-members";
+import { useGetMembers } from "@/features/members/workspace/api/use-get-members";
 
 import { PageLoader } from "@/components/page-loader";
 import { PageError } from "@/components/page-error";
@@ -31,7 +31,7 @@ const TasksClient = ({ userId }: TasksClientProps) => {
   );
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-fit flex flex-col">
       <TaskViewSwitcher memberId={currentMember?.$id} />
     </div>
   );

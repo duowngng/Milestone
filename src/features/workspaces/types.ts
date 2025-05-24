@@ -1,4 +1,5 @@
 import { Models } from "node-appwrite";
+import { AdminWorkspaceMember } from "../members/types";
 
 export type Workspace = Models.Document & {
   name: string;
@@ -12,4 +13,5 @@ export type AdminWorkspace = Workspace & {
     name: string;
     email: string;
   };
+  members: AdminWorkspaceMember[];
 };
