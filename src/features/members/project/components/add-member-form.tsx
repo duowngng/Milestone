@@ -58,6 +58,10 @@ export const AddMemberForm = ({
 
   const currentMemberIds = currentProjectMembers.map((member) => member.userId);
 
+  const sortedMemberOptions = [...memberOptions].sort((a, b) =>
+    a.name.localeCompare(b.name)
+  );
+
   function handleAdd(id: string) {
     if (!selectedIds.includes(id)) {
       setValue("userIds", [...selectedIds, id]);
@@ -109,8 +113,8 @@ export const AddMemberForm = ({
                         <CommandInput placeholder="Type to search members..." />
                         <CommandList>
                           <CommandEmpty>No members found.</CommandEmpty>
-                          <CommandGroup>
-                            {memberOptions.map((member) => {
+                          <CommandGroup className="max-h-48 overflow-y-auto">
+                            {sortedMemberOptions.map((member) => {
                               const isCurrentMember =
                                 currentMemberIds?.includes(member.id);
 

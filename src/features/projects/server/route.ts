@@ -59,6 +59,10 @@ const app = new Hono()
 
         const projectIds = projectMembers.documents.map((pm) => pm.projectId);
 
+        if (projectIds.length === 0) {
+          return c.json({ data: { documents: [], total: 0 } });
+        }
+
         const projects = await databases.listDocuments<Project>(
           DATABASE_ID,
           PROJECTS_ID,
@@ -91,14 +95,26 @@ const app = new Hono()
       projectId
     );
 
-    const member = await getWorkspaceMember({
+    const workspaceMember = await getWorkspaceMember({
       databases,
       workspaceId: project.workspaceId,
       userId: user.$id,
     });
 
-    if (!member) {
+    if (!workspaceMember) {
       return c.json({ message: "Unauthorized" }, 401);
+    }
+
+    if (workspaceMember.role !== MemberRole.MANAGER) {
+      const projectMember = await getProjectMember({
+        databases,
+        projectId,
+        userId: user.$id,
+      });
+
+      if (!projectMember) {
+        return c.json({ message: "Unauthorized" }, 401);
+      }
     }
 
     return c.json({ data: project });

@@ -67,7 +67,11 @@ export const WorkspaceIdClient = () => {
     <div className="h-full flex flex-col space-y-4">
       <Analytics data={analytics} />
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        <TaskList data={tasks.documents} total={tasks.total} />
+        <TaskList
+          data={tasks.documents}
+          total={tasks.total}
+          canCreateTask={projects.total > 0}
+        />
         <ProjectList
           data={projects.documents}
           total={projects.total}
@@ -82,9 +86,10 @@ export const WorkspaceIdClient = () => {
 interface TaskListProps {
   data: Task[];
   total: number;
+  canCreateTask: boolean;
 }
 
-export const TaskList = ({ data, total }: TaskListProps) => {
+export const TaskList = ({ data, total, canCreateTask }: TaskListProps) => {
   const workspaceId = useWorkspaceId();
   const { open: createTask } = useCreateTaskModal();
 
@@ -93,9 +98,11 @@ export const TaskList = ({ data, total }: TaskListProps) => {
       <div className="bg-muted rounded-lg p-4">
         <div className="flex items-center justify-between">
           <p className="text-lg font-semibold">Tasks ({total})</p>
-          <Button onClick={() => createTask()} variant="muted" size="icon">
-            <PlusIcon className="size-4 text-neutral-400" />
-          </Button>
+          {canCreateTask && (
+            <Button onClick={() => createTask()} variant="muted" size="icon">
+              <PlusIcon className="size-4 text-neutral-400" />
+            </Button>
+          )}
         </div>
         <DottedSeparator className="my-4" />
         <ul className="flex flex-col gap-y-4">
@@ -120,13 +127,15 @@ export const TaskList = ({ data, total }: TaskListProps) => {
               </Link>
             </li>
           ))}
-          <li className=" text-sm text-muted-foreground text-center hidden first-of-type:block">
+          <li className="text-sm text-muted-foreground text-center hidden first-of-type:block">
             No task found
           </li>
         </ul>
-        <Button variant="muted" className="mt-4 w-full" asChild>
-          <Link href={`/workspaces/${workspaceId}/tasks`}>Show all</Link>
-        </Button>
+        {total > 0 && (
+          <Button variant="muted" className="mt-4 w-full" asChild>
+            <Link href={`/workspaces/${workspaceId}/tasks`}>Show all</Link>
+          </Button>
+        )}
       </div>
     </div>
   );
@@ -178,7 +187,7 @@ export const ProjectList = ({ data, total, isManager }: ProjectListProps) => {
               </Link>
             </li>
           ))}
-          <li className=" text-sm text-muted-foreground text-center hidden first-of-type:block">
+          <li className="col-span-2 text-sm text-muted-foreground text-center hidden first-of-type:block">
             No project found
           </li>
         </ul>

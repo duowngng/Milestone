@@ -31,7 +31,7 @@ const TasksClient = ({ userId }: TasksClientProps) => {
   );
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-fit flex flex-col">
       <TaskViewSwitcher memberId={currentMember?.$id} />
     </div>
   );

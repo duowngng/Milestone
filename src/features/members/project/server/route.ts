@@ -26,7 +26,10 @@ const app = new Hono()
     sessionMiddleware,
     zValidator(
       "query",
-      z.object({ workspaceId: z.string(), projectId: z.string() })
+      z.object({
+        workspaceId: z.string(),
+        projectId: z.string().optional(),
+      })
     ),
     async (c) => {
       const { workspaceId, projectId } = c.req.valid("query");
@@ -44,36 +47,72 @@ const app = new Hono()
         return c.json({ error: "Unauthorized" }, 401);
       }
 
-      const projectMember = await getProjectMember({
-        databases,
-        projectId,
-        userId: user.$id,
-      });
+      const isManager = isWorkspaceManager(workspaceMember);
+      let projectMembers: ProjectMember[] = [];
 
-      if (!isWorkspaceManager(workspaceMember) && !projectMember) {
-        return c.json({ error: "Unauthorized" }, 401);
+      if (projectId) {
+        const projectMember = await getProjectMember({
+          databases,
+          projectId,
+          userId: user.$id,
+        });
+
+        if (!isManager && !projectMember) {
+          return c.json({ error: "Unauthorized" }, 401);
+        }
+
+        const result = await databases.listDocuments<ProjectMember>(
+          DATABASE_ID,
+          PROJECT_MEMBERS_ID,
+          [Query.equal("projectId", projectId)]
+        );
+
+        projectMembers = result.documents;
+      } else {
+        if (isManager) {
+          const result = await databases.listDocuments<ProjectMember>(
+            DATABASE_ID,
+            PROJECT_MEMBERS_ID,
+            [Query.equal("workspaceId", workspaceId)]
+          );
+          projectMembers = result.documents;
+        } else {
+          const myProjects = await databases.listDocuments<ProjectMember>(
+            DATABASE_ID,
+            PROJECT_MEMBERS_ID,
+            [Query.equal("userId", user.$id)]
+          );
+
+          if (myProjects.documents.length === 0) {
+            return c.json({ data: { documents: [], total: 0 } });
+          }
+
+          const projectIds = myProjects.documents.map((pm) => pm.projectId);
+
+          const result = await databases.listDocuments<ProjectMember>(
+            DATABASE_ID,
+            PROJECT_MEMBERS_ID,
+            [Query.equal("projectId", projectIds)]
+          );
+
+          projectMembers = result.documents;
+        }
       }
 
-      const projectMembers = await databases.listDocuments<ProjectMember>(
-        DATABASE_ID,
-        PROJECT_MEMBERS_ID,
-        [Query.equal("projectId", projectId)]
-      );
-
       const populatedMembers = await Promise.all(
-        projectMembers.documents.map(async (member) => {
-          const user = await users.get(member.userId);
+        projectMembers.map(async (member) => {
+          const u = await users.get(member.userId);
           return {
             ...member,
-            name: user.name || user.email,
-            email: user.email,
+            name: u.name || u.email,
+            email: u.email,
           };
         })
       );
 
       return c.json({
         data: {
-          ...projectMembers,
+          total: populatedMembers.length,
           documents: populatedMembers,
         },
       });
