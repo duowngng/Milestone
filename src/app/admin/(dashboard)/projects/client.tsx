@@ -31,27 +31,15 @@ export const AdminProjectsClient = () => {
 
   const { open } = useCreateProjectModal();
 
-  if (isLoading) {
-    return (
-      <div className="w-full border rounded-lg h-[200px] flex flex-col items-center justify-center">
-        <Loader className="size-5 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  if (!projects || !members) {
-    return <PageError message="Failed to load data" />;
-  }
-
   const membersByProject: Record<string, AdminProjectMember[]> = {};
-  members.documents.forEach((member: AdminProjectMember) => {
+  members?.documents.forEach((member: AdminProjectMember) => {
     if (!membersByProject[member.projectId]) {
       membersByProject[member.projectId] = [];
     }
     membersByProject[member.projectId].push(member);
   });
 
-  const projectsWithMembers = projects.documents.map(
+  const projectsWithMembers = projects?.documents.map(
     (project: AdminProject) => ({
       ...project,
       members: membersByProject[project.$id] || [],
@@ -74,10 +62,18 @@ export const AdminProjectsClient = () => {
 
       <DottedSeparator className="my-4" />
 
-      <DataTable
-        columns={columns}
-        data={projectsWithMembers as AdminProject[]}
-      />
+      {isLoading ? (
+        <div className="w-full border rounded-lg h-[200px] flex flex-col items-center justify-center">
+          <Loader className="size-5 animate-spin text-muted-foreground" />
+        </div>
+      ) : !projects || !members ? (
+        <PageError message="Failed to load data" />
+      ) : (
+        <DataTable
+          columns={columns}
+          data={projectsWithMembers as AdminProject[]}
+        />
+      )}
     </div>
   );
 };

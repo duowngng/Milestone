@@ -1,12 +1,14 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { useGetMembers } from "@/features/members/workspace/api/use-get-members";
-import { useGetProjects } from "@/features/projects/api/use-get-projects";
+import { useGetProjectMembers } from "@/features/members/project/api/use-get-project-members";
+import { useGetProject } from "@/features/projects/api/use-get-project";
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 import { Loader } from "lucide-react";
 
 import { EditTaskForm } from "./edit-task-form";
 
 import { useGetTask } from "../api/use-get-task";
+import { useMemo } from "react";
 
 interface EditTaskFormWrapperProps {
   onCancel: () => void;
@@ -22,25 +24,45 @@ export const EditTaskFormWrapper = ({
   const { data: initialValues, isLoading: isLoadingTask } = useGetTask({
     taskId: id,
   });
-  const { data: projects, isLoading: isLoadingProjects } = useGetProjects({
-    workspaceId,
+  const { data: project, isLoading: isLoadingProject } = useGetProject({
+    projectId: initialValues?.projectId || "",
   });
   const { data: members, isLoading: isLoadingMembers } = useGetMembers({
     workspaceId,
   });
+  const { data: projectMembers, isLoading: isLoadingProjectMembers } =
+    useGetProjectMembers({
+      workspaceId,
+      projectId: initialValues?.projectId,
+    });
 
-  const projectOptions = projects?.documents.map((project) => ({
-    id: project.$id,
-    name: project.name,
-    imageUrl: project.imageUrl,
-  }));
+  const memberOptions = useMemo(() => {
+    if (
+      !members?.documents ||
+      !projectMembers?.documents ||
+      !initialValues?.projectId
+    ) {
+      return [];
+    }
 
-  const memberOptions = members?.documents.map((member) => ({
-    id: member.$id,
-    name: member.name,
-  }));
+    const projectMemberIds = new Set(
+      projectMembers.documents.map((pm) => pm.userId)
+    );
 
-  const isLoading = isLoadingProjects || isLoadingMembers || isLoadingTask;
+    return members.documents
+      .filter((member) => projectMemberIds.has(member.userId))
+      .map((member) => ({
+        id: member.$id,
+        name: member.name,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [members?.documents, projectMembers?.documents, initialValues?.projectId]);
+
+  const isLoading =
+    isLoadingProject ||
+    isLoadingMembers ||
+    isLoadingProjectMembers ||
+    isLoadingTask;
 
   if (isLoading) {
     return (
@@ -61,7 +83,11 @@ export const EditTaskFormWrapper = ({
       <EditTaskForm
         onCancel={onCancel}
         initialValues={initialValues}
-        projectOptions={projectOptions ?? []}
+        project={{
+          id: project?.$id || "",
+          name: project?.name || "",
+          imageUrl: project?.imageUrl || "",
+        }}
         memberOptions={memberOptions ?? []}
       />
     </div>

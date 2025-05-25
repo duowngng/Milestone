@@ -312,7 +312,7 @@ export function DataGantt({
         onAddItem={(date: Date) =>
           open({ projectId: paramProjectId, startDate: date })
         }
-        className="border rounded-lg flex-grow h-full"
+        className="border rounded-lg flex-grow h-full max-h-[calc(100dvh-4rem)]"
       >
         <GanttSidebar className="invisible lg:visible">
           {Object.entries(sortedGroups).map(([projectId, feats]) => (
@@ -360,9 +360,11 @@ export function DataGantt({
                                   {f.name}
                                 </span>
                               </span>
-                              <span className="ml-1 text-xs opacity-70 shrink-0">
-                                {f.progress}%
-                              </span>
+                              {differenceInDays(f.endAt, f.startAt) > 0 && (
+                                <span className="ml-1 text-xs opacity-70 shrink-0">
+                                  {f.progress}%
+                                </span>
+                              )}
                             </p>
                           </GanttFeatureItem>
                         </button>

@@ -27,10 +27,9 @@ import { createProjectSchema } from "../schemas";
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 import { useCreateProject } from "../api/use-create-project";
 
-
 interface CreateProjectFormProps {
   onCancel?: () => void;
-};
+}
 
 export const CreateProjectForm = ({ onCancel }: CreateProjectFormProps) => {
   const workspaceId = useWorkspaceId();
@@ -46,19 +45,24 @@ export const CreateProjectForm = ({ onCancel }: CreateProjectFormProps) => {
     },
   });
 
-  const onSubmit = ( values: z.infer<typeof createProjectSchema>) => {
+  const onSubmit = (values: z.infer<typeof createProjectSchema>) => {
     const finalValues = {
       ...values,
       workspaceId,
-      image: values.image instanceof File ? values.image : ""
+      image: values.image instanceof File ? values.image : "",
     };
 
-    mutate({ form: finalValues }, {
-      onSuccess: ({ data }) => {
-        form.reset();
-        router.push(`/workspaces/${workspaceId}/projects/${data.$id}`);
+    mutate(
+      { form: finalValues },
+      {
+        onSuccess: ({ data }) => {
+          form.reset();
+          router.push(
+            `/workspaces/${workspaceId}/members?members-view=project&projectId=${data.$id}`
+          );
+        },
       }
-    });
+    );
   };
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,7 +71,7 @@ export const CreateProjectForm = ({ onCancel }: CreateProjectFormProps) => {
     if (file) {
       form.setValue("image", file);
     }
-  }
+  };
 
   return (
     <Card className="w-full h-full border-none shadow-none">
@@ -88,14 +92,9 @@ export const CreateProjectForm = ({ onCancel }: CreateProjectFormProps) => {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      Project Name
-                    </FormLabel>
+                    <FormLabel>Project Name</FormLabel>
                     <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="Enter project name"
-                      />
+                      <Input {...field} placeholder="Enter project name" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -140,7 +139,7 @@ export const CreateProjectForm = ({ onCancel }: CreateProjectFormProps) => {
                           onChange={handleImageChange}
                           disabled={isPending}
                         />
-                        { field.value ? (
+                        {field.value ? (
                           <Button
                             type="button"
                             variant="destructive"
@@ -149,7 +148,7 @@ export const CreateProjectForm = ({ onCancel }: CreateProjectFormProps) => {
                             className="w-fit mt-2"
                             onClick={() => {
                               field.onChange(null);
-                              if(inputRef.current) {
+                              if (inputRef.current) {
                                 inputRef.current.value = "";
                               }
                             }}
@@ -174,29 +173,25 @@ export const CreateProjectForm = ({ onCancel }: CreateProjectFormProps) => {
                 )}
               />
             </div>
-              <DottedSeparator className="py-7" />
-              <div className="flex items-center justify-between">
-                <Button
-                  type="button"
-                  size="lg"
-                  variant="secondary"
-                  onClick={onCancel}
-                  disabled={isPending}
-                  className={cn(!onCancel && "invisible")}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  size="lg"
-                  disabled={isPending}
-                >
-                  Create Project
-                </Button>
-              </div>
+            <DottedSeparator className="py-7" />
+            <div className="flex items-center justify-between">
+              <Button
+                type="button"
+                size="lg"
+                variant="secondary"
+                onClick={onCancel}
+                disabled={isPending}
+                className={cn(!onCancel && "invisible")}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" size="lg" disabled={isPending}>
+                Create Project
+              </Button>
+            </div>
           </form>
         </Form>
       </CardContent>
     </Card>
-  )
-}
+  );
+};

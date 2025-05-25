@@ -29,7 +29,7 @@ export const AdminTasksClient = () => {
     },
   ] = useAdminTaskFilters();
 
-  const { data: tasks, isLoading } = useGetAdminTasks({
+  const { data, isLoading } = useGetAdminTasks({
     projectId,
     assigneeId,
     status,
@@ -44,22 +44,10 @@ export const AdminTasksClient = () => {
 
   const { open } = useCreateTaskModal();
 
-  if (isLoading) {
-    return (
-      <div className="w-full border rounded-lg h-[200px] flex flex-col items-center justify-center">
-        <Loader className="size-5 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  if (!tasks) {
-    return <PageError message="Failed to load tasks" />;
-  }
-
   return (
     <div className="h-fit flex flex-col border rounded-lg p-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Tasks ({tasks?.total})</h1>
+        <h1 className="text-2xl font-bold">Tasks ({data?.total})</h1>
         <Button onClick={() => open()} size="sm" className="w-full lg:w-auto">
           <PlusIcon className="size-4 mr-2" />
           New
@@ -72,7 +60,15 @@ export const AdminTasksClient = () => {
 
       <DottedSeparator className="my-4" />
 
-      <DataTable columns={columns} data={tasks.documents} />
+      {isLoading ? (
+        <div className="w-full border rounded-lg h-[200px] flex flex-col items-center justify-center">
+          <Loader className="size-5 animate-spin text-muted-foreground" />
+        </div>
+      ) : !data ? (
+        <PageError message="Failed to load data" />
+      ) : (
+        <DataTable columns={columns} data={data.documents} />
+      )}
     </div>
   );
 };

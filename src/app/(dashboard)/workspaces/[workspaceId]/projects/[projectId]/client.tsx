@@ -40,7 +40,7 @@ export const ProjectIdClient = () => {
     return <PageLoader />;
   }
 
-  if (!project) {
+  if (!project || !currentMember) {
     return <PageError message="Project not found" />;
   }
 
@@ -79,7 +79,7 @@ export const ProjectIdClient = () => {
         </div>
       </div>
       {analytics ? <Analytics data={analytics} /> : null}
-      <TaskViewSwitcher hideProjectFilter />
+      <TaskViewSwitcher hideProject />
     </div>
   );
 };

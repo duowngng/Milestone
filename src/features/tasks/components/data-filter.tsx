@@ -26,13 +26,13 @@ import { TaskPriority, TaskStatus } from "../types";
 import { useTaskFilters } from "../hooks/use-task-filters";
 
 interface DataFilterProps {
-  hideProjectFilter?: boolean;
+  hideProject?: boolean;
   memberId?: string;
   isAdmin?: boolean;
 }
 
 export const DataFilter = ({
-  hideProjectFilter,
+  hideProject,
   memberId,
   isAdmin = false,
 }: DataFilterProps) => {
@@ -194,7 +194,7 @@ export const DataFilter = ({
           ))}
         </SelectContent>
       </Select>
-      {!hideProjectFilter && (
+      {!hideProject && (
         <Select
           defaultValue={projectId ?? undefined}
           onValueChange={(value) => onProjectChange(value)}

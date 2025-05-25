@@ -3,6 +3,7 @@ import { Models } from "node-appwrite";
 export enum MemberRole {
   MANAGER = "MANAGER",
   MEMBER = "MEMBER",
+  WORKSPACE_MANAGER = "WORKSPACE_MANAGER",
 }
 
 export type WorkspaceMember = Models.Document & {

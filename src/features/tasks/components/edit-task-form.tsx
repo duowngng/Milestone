@@ -35,14 +35,14 @@ import { Task, TaskStatus } from "../types";
 
 interface EditTaskFormProps {
   onCancel?: () => void;
-  projectOptions: { id: string; name: string; imageUrl: string }[];
+  project: { id: string; name: string; imageUrl: string };
   memberOptions: { id: string; name: string }[];
   initialValues: Task;
 }
 
 export const EditTaskForm = ({
   onCancel,
-  projectOptions,
+  project,
   memberOptions,
   initialValues,
 }: EditTaskFormProps) => {
@@ -94,31 +94,20 @@ export const EditTaskForm = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Project</FormLabel>
-                    <Select
-                      defaultValue={field.value}
-                      onValueChange={field.onChange}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select project" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <FormMessage />
-                      <SelectContent>
-                        {projectOptions.map((project) => (
-                          <SelectItem key={project.id} value={project.id}>
-                            <div className="flex items-center gap-x-2">
-                              <ProjectAvatar
-                                className="size-6"
-                                name={project.name}
-                                image={project.imageUrl}
-                              />
-                              {project.name}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <div className="flex h-12 w-full items-center rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm cursor-not-allowed">
+                        <div className="flex items-center gap-x-2">
+                          <ProjectAvatar
+                            className="size-6"
+                            name={project.name}
+                            image={project.imageUrl}
+                          />
+                          <span>{project.name}</span>
+                        </div>
+                      </div>
+                    </FormControl>
+                    <Input {...field} type="hidden" />
+                    <FormMessage />
                   </FormItem>
                 )}
               />

@@ -22,16 +22,20 @@ const boards: TaskStatus[] = [
 
 type TaskState = {
   [key in TaskStatus]: Task[];
-}
+};
 
 interface DataKanbanProps {
   data: Task[];
-  onChange: (task: { $id: string, status: TaskStatus, position: number }[]) => void;
-};
+  onChange: (
+    task: { $id: string; status: TaskStatus; position: number }[]
+  ) => void;
+  hideProject?: boolean;
+}
 
 export const DataKanban = ({
   data,
   onChange,
+  hideProject = false,
 }: DataKanbanProps) => {
   const [tasks, setTasks] = useState<TaskState>(() => {
     const initialTasks: TaskState = {
@@ -47,7 +51,9 @@ export const DataKanban = ({
     });
 
     Object.keys(initialTasks).forEach((status) => {
-      initialTasks[status as TaskStatus].sort((a, b) => a.position - b.position);
+      initialTasks[status as TaskStatus].sort(
+        (a, b) => a.position - b.position
+      );
     });
 
     return initialTasks;
@@ -73,86 +79,97 @@ export const DataKanban = ({
     setTasks(newTasks);
   }, [data]);
 
-  const onDragEnd = useCallback((result: DropResult) => {
-    if (!result.destination) {
-      return;
-    }
-
-    const { source, destination } = result;
-    const sourceStatus = source.droppableId as TaskStatus;
-    const destStatus = destination.droppableId as TaskStatus;
-
-    let updatesPayload: { $id: string, status: TaskStatus, position: number }[] = [];
-
-    setTasks((prevTasks) => {
-      const newTasks = { ...prevTasks };
-
-      const sourceColumn = [...newTasks[sourceStatus]];
-      const [movedTask] = sourceColumn.splice(source.index, 1);
-
-      if (!movedTask) {
-        console.error("Source task not found");
-        return prevTasks;
+  const onDragEnd = useCallback(
+    (result: DropResult) => {
+      if (!result.destination) {
+        return;
       }
 
-      const updatedMovedTask = sourceStatus !== destStatus
-        ? { ...movedTask, status: destStatus }
-        : movedTask;
+      const { source, destination } = result;
+      const sourceStatus = source.droppableId as TaskStatus;
+      const destStatus = destination.droppableId as TaskStatus;
 
-      newTasks[sourceStatus] = sourceColumn;
+      let updatesPayload: {
+        $id: string;
+        status: TaskStatus;
+        position: number;
+      }[] = [];
 
-      const destColumn = [...newTasks[destStatus]];
-      destColumn.splice(destination.index, 0, updatedMovedTask);
-      newTasks[destStatus] = destColumn;
+      setTasks((prevTasks) => {
+        const newTasks = { ...prevTasks };
 
-      updatesPayload = [];
+        const sourceColumn = [...newTasks[sourceStatus]];
+        const [movedTask] = sourceColumn.splice(source.index, 1);
 
-      updatesPayload.push({
-        $id: updatedMovedTask.$id,
-        status: destStatus,
-        position: Math.min((destination.index + 1) * 1000, 1_000_000),
-      });
-
-      newTasks[destStatus].forEach((task, index) => {
-        if (task && task.$id !== updatedMovedTask.$id) {
-          const newPosition = Math.min((index + 1) * 1000, 1_000_000);
-          if (task.position !== newPosition) {
-            updatesPayload.push({
-              $id: task.$id,
-              status: destStatus,
-              position: newPosition,
-            });
-          }
+        if (!movedTask) {
+          console.error("Source task not found");
+          return prevTasks;
         }
-      });
 
-      if (sourceStatus !== destStatus) {
-        newTasks[sourceStatus].forEach((task, index) => {
-          if (task) {
+        const updatedMovedTask =
+          sourceStatus !== destStatus
+            ? { ...movedTask, status: destStatus }
+            : movedTask;
+
+        newTasks[sourceStatus] = sourceColumn;
+
+        const destColumn = [...newTasks[destStatus]];
+        destColumn.splice(destination.index, 0, updatedMovedTask);
+        newTasks[destStatus] = destColumn;
+
+        updatesPayload = [];
+
+        updatesPayload.push({
+          $id: updatedMovedTask.$id,
+          status: destStatus,
+          position: Math.min((destination.index + 1) * 1000, 1_000_000),
+        });
+
+        newTasks[destStatus].forEach((task, index) => {
+          if (task && task.$id !== updatedMovedTask.$id) {
             const newPosition = Math.min((index + 1) * 1000, 1_000_000);
             if (task.position !== newPosition) {
               updatesPayload.push({
                 $id: task.$id,
-                status: sourceStatus,
+                status: destStatus,
                 position: newPosition,
               });
             }
           }
         });
-      }
 
-      return newTasks;
-    });
+        if (sourceStatus !== destStatus) {
+          newTasks[sourceStatus].forEach((task, index) => {
+            if (task) {
+              const newPosition = Math.min((index + 1) * 1000, 1_000_000);
+              if (task.position !== newPosition) {
+                updatesPayload.push({
+                  $id: task.$id,
+                  status: sourceStatus,
+                  position: newPosition,
+                });
+              }
+            }
+          });
+        }
 
-    onChange(updatesPayload);
-  }, [onChange]);
+        return newTasks;
+      });
+
+      onChange(updatesPayload);
+    },
+    [onChange]
+  );
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <div className="flex overflow-x-auto">
+      <div className="flex h-full overflow-x-auto">
         {boards.map((board) => {
           return (
-            <div key={board} className="flex-1 mx-2 bg-muted p-1.5 rounded-md min-w-[200px]">
+            <div
+              key={board}
+              className="flex-1 mx-2 bg-muted p-1.5 rounded-md min-w-[200px]"
+            >
               <KanbanColumnHeader
                 board={board}
                 taskCount={tasks[board].length}
@@ -162,7 +179,7 @@ export const DataKanban = ({
                   <div
                     ref={provided.innerRef}
                     {...provided.droppableProps}
-                    className="min-h-[200px] py-1.5"
+                    className="min-h-[200px] max-h-[calc(100dvh-4rem)] overflow-y-auto py-1.5"
                   >
                     {tasks[board].map((task, index) => {
                       return (
@@ -177,7 +194,10 @@ export const DataKanban = ({
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
                             >
-                              <KanbanCard task={task} />
+                              <KanbanCard
+                                task={task}
+                                hideProject={hideProject}
+                              />
                             </div>
                           )}
                         </Draggable>
@@ -188,7 +208,7 @@ export const DataKanban = ({
                 )}
               </Droppable>
             </div>
-          )
+          );
         })}
       </div>
     </DragDropContext>

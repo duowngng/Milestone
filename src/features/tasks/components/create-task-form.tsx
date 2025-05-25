@@ -30,6 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+import { useCreateTaskModal } from "../hooks/use-create-task-modal";
 import { createTaskSchema } from "../schemas";
 import { useCreateTask } from "../api/use-create-task";
 import { TaskStatus } from "../types";
@@ -53,6 +54,7 @@ export const CreateTaskForm = ({
 }: CreateTaskFormProps) => {
   const workspaceId = useWorkspaceId();
   const { mutate, isPending } = useCreateTask();
+  const { setInitialProjectId } = useCreateTaskModal();
 
   const form = useForm<z.infer<typeof createTaskSchema>>({
     resolver: zodResolver(createTaskSchema.omit({ workspaceId: true })),
@@ -100,7 +102,10 @@ export const CreateTaskForm = ({
                     <FormLabel>Project</FormLabel>
                     <Select
                       defaultValue={field.value}
-                      onValueChange={field.onChange}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        setInitialProjectId(value);
+                      }}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -174,6 +179,7 @@ export const CreateTaskForm = ({
                     <Select
                       defaultValue={field.value}
                       onValueChange={field.onChange}
+                      disabled={memberOptions.length === 0}
                     >
                       <FormControl>
                         <SelectTrigger>
