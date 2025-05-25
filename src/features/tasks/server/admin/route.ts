@@ -118,14 +118,28 @@ const app = new Hono()
         }
       }
 
-      const tasks = await databases.listDocuments<Task>(
-        DATABASE_ID,
-        TASKS_ID,
-        query
-      );
+      const limit = 100;
+      let offset = 0;
+      let tasks: Task[] = [];
 
-      const projectIds = tasks.documents.map((task) => task.projectId);
-      const assigneeIds = tasks.documents.map((task) => task.assigneeId);
+      while (true) {
+        const batch = await databases.listDocuments<Task>(
+          DATABASE_ID,
+          TASKS_ID,
+          [...query, Query.limit(limit), Query.offset(offset)]
+        );
+
+        tasks = tasks.concat(batch.documents);
+
+        if (batch.documents.length < limit) {
+          break;
+        }
+
+        offset += limit;
+      }
+
+      const projectIds = tasks.map((task) => task.projectId);
+      const assigneeIds = tasks.map((task) => task.assigneeId);
 
       const projects = await databases.listDocuments<Project>(
         DATABASE_ID,
@@ -151,7 +165,7 @@ const app = new Hono()
         })
       );
 
-      const populatedTasks = tasks.documents.map((task) => {
+      const populatedTasks = tasks.map((task) => {
         const project = projects.documents.find(
           (project) => project.$id === task.projectId
         );
@@ -169,7 +183,7 @@ const app = new Hono()
 
       return c.json({
         data: {
-          total: tasks.total,
+          total: tasks.length,
           documents: populatedTasks,
         },
       });

@@ -35,27 +35,15 @@ export const AdminWorkspacesClient = () => {
 
   const { open } = useCreateWorkspaceModal();
 
-  if (isLoading) {
-    return (
-      <div className="w-full border rounded-lg h-[200px] flex flex-col items-center justify-center">
-        <Loader className="size-5 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  if (!workspaces || !members) {
-    return <PageError message="Failed to load data" />;
-  }
-
   const membersByWorkspace: Record<string, AdminWorkspaceMember[]> = {};
-  members.documents.forEach((member: AdminWorkspaceMember) => {
+  members?.documents.forEach((member: AdminWorkspaceMember) => {
     if (!membersByWorkspace[member.workspaceId]) {
       membersByWorkspace[member.workspaceId] = [];
     }
     membersByWorkspace[member.workspaceId].push(member);
   });
 
-  const workspacesWithMembers = workspaces.documents.map(
+  const workspacesWithMembers = workspaces?.documents.map(
     (workspace: AdminWorkspace) => ({
       ...workspace,
       members: membersByWorkspace[workspace.$id] || [],
@@ -78,10 +66,18 @@ export const AdminWorkspacesClient = () => {
 
       <DottedSeparator className="my-4" />
 
-      <DataTable
-        columns={columns}
-        data={workspacesWithMembers as AdminWorkspace[]}
-      />
+      {isLoading ? (
+        <div className="w-full border rounded-lg h-[200px] flex flex-col items-center justify-center">
+          <Loader className="size-5 animate-spin text-muted-foreground" />
+        </div>
+      ) : !workspaces || !members ? (
+        <PageError message="Failed to load data" />
+      ) : (
+        <DataTable
+          columns={columns}
+          data={workspacesWithMembers as AdminWorkspace[]}
+        />
+      )}
     </div>
   );
 };

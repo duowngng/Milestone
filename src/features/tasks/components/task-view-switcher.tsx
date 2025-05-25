@@ -30,12 +30,12 @@ import { useTaskFilters } from "../hooks/use-task-filters";
 import { TaskStatus } from "../types";
 
 interface TaskViewSwitcherProps {
-  hideProjectFilter?: boolean;
+  hideProject?: boolean;
   memberId?: string;
 }
 
 export const TaskViewSwitcher = ({
-  hideProjectFilter,
+  hideProject,
   memberId,
 }: TaskViewSwitcherProps) => {
   const [
@@ -113,9 +113,10 @@ export const TaskViewSwitcher = ({
     <Tabs
       defaultValue={view}
       onValueChange={setView}
-      className="flex-1 w-full border rounded-lg"
+      className="flex-1 w-full border rounded-lg flex flex-col overflow-hidden"
     >
-      <div className="h-full flex flex-col overflow-auto p-4">
+      <div className="p-4 pb-0 shrink-0">
+        {" "}
         <div className="flex flex-col gap-y-2 lg:flex-row justify-between items-center">
           <TabsList className="w-full lg:w-auto">
             <TabsTrigger className="h-8 w-full lg:w-auto" value="table">
@@ -142,20 +143,23 @@ export const TaskViewSwitcher = ({
         </div>
         <DottedSeparator className="my-4" />
         <DataFilter
-          hideProjectFilter={hideProjectFilter}
+          hideProject={hideProject}
           memberId={memberId}
           isAdmin={isUserProjectManager || isUserWorkspaceManager}
         />
         <DottedSeparator className="my-4" />
+      </div>
+
+      <div className="flex-grow overflow-hidden p-4 pt-0">
         {isLoading ? (
-          <div className="w-full border rounded-lg h-[200px] flex flex-col items-center justify-center">
+          <div className="w-full border rounded-lg h-dvh flex flex-col items-center justify-center">
             <Loader className="size-5 animate-spin text-muted-foreground" />
           </div>
         ) : (
           <>
             <TabsContent value="table" className="mt-0">
               <DataTable
-                columns={columns(isUserProjectManager)}
+                columns={columns(isUserProjectManager, hideProject)}
                 data={tasks?.documents ?? []}
               />
             </TabsContent>
@@ -163,6 +167,7 @@ export const TaskViewSwitcher = ({
               <DataKanban
                 data={tasks?.documents ?? []}
                 onChange={onKanbanChange}
+                hideProject={hideProject}
               />
             </TabsContent>
             <TabsContent value="calendar" className="mt-0 h-full pb-4">

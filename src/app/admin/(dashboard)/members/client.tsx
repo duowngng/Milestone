@@ -27,18 +27,6 @@ export const AdminMembersClient = () => {
 
   const { open } = useCreateMemberModal();
 
-  if (isLoading) {
-    return (
-      <div className="w-full border rounded-lg h-[200px] flex flex-col items-center justify-center">
-        <Loader className="size-5 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  if (!data) {
-    return <PageError message="Failed to load members" />;
-  }
-
   return (
     <div className="h-full flex flex-col border rounded-lg p-4">
       <div className="flex items-center justify-between">
@@ -55,10 +43,18 @@ export const AdminMembersClient = () => {
 
       <DottedSeparator className="my-4" />
 
-      <DataTable
-        columns={columns}
-        data={data.documents as AdminWorkspaceMember[]}
-      />
+      {isLoading ? (
+        <div className="w-full border rounded-lg h-[200px] flex flex-col items-center justify-center">
+          <Loader className="size-5 animate-spin text-muted-foreground" />
+        </div>
+      ) : !data ? (
+        <PageError message="Failed to load data" />
+      ) : (
+        <DataTable
+          columns={columns}
+          data={data.documents as AdminWorkspaceMember[]}
+        />
+      )}
     </div>
   );
 };

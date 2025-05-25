@@ -110,6 +110,14 @@ const app = new Hono()
         })
       );
 
+      populatedMembers.sort((a, b) => {
+        if (a.role === MemberRole.MANAGER && b.role !== MemberRole.MANAGER)
+          return -1;
+        if (a.role !== MemberRole.MANAGER && b.role === MemberRole.MANAGER)
+          return 1;
+        return 0;
+      });
+
       return c.json({
         data: {
           total: populatedMembers.length,
@@ -145,6 +153,16 @@ const app = new Hono()
         projectId,
         userId: user.$id,
       });
+
+      if (isWorkspaceManager(workspaceMember) && !projectMember) {
+        return c.json({
+          data: {
+            userId: user.$id,
+            projectId: projectId,
+            role: MemberRole.WORKSPACE_MANAGER,
+          } as ProjectMember,
+        });
+      }
 
       if (!projectMember) {
         return c.json({ error: "Unauthorized" }, 401);

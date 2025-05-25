@@ -21,7 +21,8 @@ export const useCreateTaskModal = () => {
     "status",
     parseAsStringEnum(Object.values(TaskStatus))
   );
-  const [initialProjectId, setInitialProjectId] = useQueryState("projectId");
+  const [initialProjectId, setInitialProjectId] =
+    useQueryState("initialProjectId");
 
   const [initialStartDate, setInitialStartDate] = useQueryState(
     "initialStartDate",
@@ -57,6 +58,7 @@ export const useCreateTaskModal = () => {
     setIsOpen,
     initialStatus,
     initialProjectId,
+    setInitialProjectId,
     initialStartDate,
   };
 };

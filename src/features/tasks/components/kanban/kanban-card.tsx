@@ -12,9 +12,10 @@ import { Task } from "../../types";
 
 interface KanbanCardProps {
   task: Task;
+  hideProject?: boolean;
 }
 
-export const KanbanCard = ({ task }: KanbanCardProps) => {
+export const KanbanCard = ({ task, hideProject }: KanbanCardProps) => {
   return (
     <div className="bg-white p-2.5 mb-1.5 rounded shadow-sm space-y-3">
       <div className="flex items-start justify-between gap-x-2">
@@ -37,14 +38,16 @@ export const KanbanCard = ({ task }: KanbanCardProps) => {
           className="flex items-center text-xs"
         />
       </div>
-      <div className="flex items-center gap-x-1.5">
-        <ProjectAvatar
-          name={task.project.name}
-          image={task.project.imageUrl}
-          fallbackClassName="text-[10px]"
-        />
-        <span className="text-xs font-medium">{task.project.name}</span>
-      </div>
+      {!hideProject && (
+        <div className="flex items-center gap-x-1.5">
+          <ProjectAvatar
+            name={task.project.name}
+            image={task.project.imageUrl}
+            fallbackClassName="text-[10px]"
+          />
+          <span className="text-xs font-medium">{task.project.name}</span>
+        </div>
+      )}
       <div className="flex items-center gap-x-1.5">
         <Progress value={task.progress} className="h-2" />
         <p className="text-xs text-muted-foreground">{task.progress}%</p>
