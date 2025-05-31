@@ -30,12 +30,14 @@ interface DataKanbanProps {
     task: { $id: string; status: TaskStatus; position: number }[]
   ) => void;
   hideProject?: boolean;
+  canCreateTasks?: boolean;
 }
 
 export const DataKanban = ({
   data,
   onChange,
   hideProject = false,
+  canCreateTasks = false,
 }: DataKanbanProps) => {
   const [tasks, setTasks] = useState<TaskState>(() => {
     const initialTasks: TaskState = {
@@ -173,6 +175,7 @@ export const DataKanban = ({
               <KanbanColumnHeader
                 board={board}
                 taskCount={tasks[board].length}
+                canCreateTasks={canCreateTasks}
               />
               <Droppable droppableId={board}>
                 {(provided) => (

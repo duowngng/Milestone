@@ -15,18 +15,20 @@ import { useProjectId } from "@/features/projects/hooks/use-project-id";
 
 import { useDeleteTask } from "../api/use-delete-task";
 import { useEditTaskModal } from "../hooks/use-edit-task-modal";
+import { useCanManageTask } from "../hooks/use-can-manage-task";
+import { Task } from "../types";
 
 interface TaskActionsProps {
   id: string;
   projectId: string;
-  isManager?: boolean;
+  task: Task;
   children: React.ReactNode;
 }
 
 export const TaskActions = ({
   id,
   projectId,
-  isManager,
+  task: providedTask,
   children,
 }: TaskActionsProps) => {
   const router = useRouter();
@@ -34,6 +36,10 @@ export const TaskActions = ({
   const paramProjectId = useProjectId();
 
   const { open } = useEditTaskModal();
+
+  const { canDeleteTask, isLoading } = useCanManageTask({
+    task: providedTask,
+  });
 
   const [ConfirmDialog, confirm] = useConfirm(
     "Delete task",
@@ -90,9 +96,9 @@ export const TaskActions = ({
             Edit Task
           </DropdownMenuItem>
           <DropdownMenuItem
-            disabled={isPending}
+            disabled={isPending || isLoading}
             onClick={(e) => {
-              if (isPending || !isManager) {
+              if (isPending || isLoading || !canDeleteTask) {
                 e.preventDefault();
                 return;
               }
@@ -101,7 +107,7 @@ export const TaskActions = ({
             className={cn(
               "font-medium p-[10px]",
               "text-red-700 focus:text-red-700",
-              !isManager && "opacity-50 cursor-not-allowed"
+              (!canDeleteTask || isLoading) && "opacity-50 cursor-not-allowed"
             )}
           >
             <TrashIcon className="size-4 mr-2 stroke-2" />

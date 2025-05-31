@@ -14,10 +14,7 @@ import { TaskDate } from "../task-date";
 import { snakeCaseToTitleCase } from "@/lib/utils";
 import { TaskActions } from "../task-actions";
 
-export const columns = (
-  isManager: boolean,
-  hideProject: boolean = false
-): ColumnDef<Task>[] => {
+export const columns = (hideProject: boolean = false): ColumnDef<Task>[] => {
   const cols: (ColumnDef<Task> | false)[] = [
     {
       accessorKey: "name",
@@ -211,7 +208,7 @@ export const columns = (
         const projectId = row.original.projectId;
 
         return (
-          <TaskActions id={id} projectId={projectId} isManager={isManager}>
+          <TaskActions id={id} projectId={projectId} task={row.original}>
             <Button variant="ghost" className="size-8 p-0">
               <MoreVertical className="size-4" />
             </Button>

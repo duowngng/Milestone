@@ -281,8 +281,8 @@ const app = new Hono()
         userId: user.$id,
       });
 
-      if (!member) {
-        return c.json({ error: "Unauthorized" }, 401);
+      if (!member || member.role !== MemberRole.MANAGER) {
+        return c.json({ error: "Unauthorized" }, 403);
       }
 
       const highestPositionTask = await databases.listDocuments(
@@ -367,6 +367,28 @@ const app = new Hono()
 
       if (!projectMember) {
         return c.json({ error: "Unauthorized" }, 401);
+      }
+
+      if (projectMember.role !== MemberRole.MANAGER) {
+        // Regular members can only update status, progress, and position
+        const restrictedFieldsUpdated = [
+          name !== undefined,
+          projectId !== undefined,
+          startDate !== undefined,
+          dueDate !== undefined,
+          assigneeId !== undefined,
+          description !== undefined,
+          priority !== undefined,
+        ].some(Boolean);
+
+        if (restrictedFieldsUpdated) {
+          return c.json(
+            {
+              error: "Unauthorized",
+            },
+            403
+          );
+        }
       }
 
       const changedFields: string[] = [];
