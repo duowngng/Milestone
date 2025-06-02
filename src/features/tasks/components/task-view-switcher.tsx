@@ -29,6 +29,8 @@ import { useGetTasks } from "../api/use-get-tasks";
 import { useBulkUpdateTask } from "../api/use-bulk-update-task";
 import { useTaskFilters } from "../hooks/use-task-filters";
 import { TaskStatus } from "../types";
+import { ProjectOverview } from "@/features/projects/components/overview/project-overview";
+import { useGetProjectAnalytics } from "@/features/projects/api/use-get-project-analytics";
 
 interface TaskViewSwitcherProps {
   hideProject?: boolean;
@@ -39,6 +41,10 @@ export const TaskViewSwitcher = ({
   hideProject,
   memberId,
 }: TaskViewSwitcherProps) => {
+  const workspaceId = useWorkspaceId();
+  const paramProjectId = useProjectId();
+  const { open } = useCreateTaskModal();
+
   const [
     {
       projectId,
@@ -52,16 +58,18 @@ export const TaskViewSwitcher = ({
     },
   ] = useTaskFilters();
   const [view, setView] = useQueryState("task-view", {
-    defaultValue: "table",
+    defaultValue: paramProjectId ? "overview" : "table",
   });
-
-  const workspaceId = useWorkspaceId();
-  const paramProjectId = useProjectId();
-  const { open } = useCreateTaskModal();
 
   const { data: managedProjects, isLoading: isLoadingManagedProjects } =
     useGetManagedProjects({
       workspaceId,
+    });
+
+  const { data: analytics, isLoading: isLoadingAnalytics } =
+    useGetProjectAnalytics({
+      projectId: paramProjectId,
+      enabled: !!paramProjectId,
     });
 
   const { data: workspaceMember } = useGetCurrentMember({
@@ -114,7 +122,10 @@ export const TaskViewSwitcher = ({
   );
 
   const isLoading =
-    isLoadingTasks || isLoadingMilestones || isLoadingManagedProjects;
+    isLoadingTasks ||
+    isLoadingMilestones ||
+    isLoadingManagedProjects ||
+    isLoadingAnalytics;
 
   const canCreateTasks = paramProjectId
     ? isUserProjectManager
@@ -130,6 +141,11 @@ export const TaskViewSwitcher = ({
         {" "}
         <div className="flex flex-col gap-y-2 lg:flex-row justify-between items-center">
           <TabsList className="w-full lg:w-auto">
+            {paramProjectId && (
+              <TabsTrigger className="h-8 w-full lg:w-auto" value="overview">
+                Overview
+              </TabsTrigger>
+            )}
             <TabsTrigger className="h-8 w-full lg:w-auto" value="table">
               Table
             </TabsTrigger>
@@ -155,12 +171,16 @@ export const TaskViewSwitcher = ({
           )}
         </div>
         <DottedSeparator className="my-4" />
-        <DataFilter
-          hideProject={hideProject}
-          memberId={memberId}
-          isManager={isUserProjectManager || isUserWorkspaceManager}
-        />
-        <DottedSeparator className="my-4" />
+        {view !== "overview" && (
+          <>
+            <DataFilter
+              hideProject={hideProject}
+              memberId={memberId}
+              isManager={isUserProjectManager || isUserWorkspaceManager}
+            />
+            <DottedSeparator className="my-4" />
+          </>
+        )}
       </div>
 
       <div className="flex-grow overflow-hidden p-4 pt-0">
@@ -170,6 +190,9 @@ export const TaskViewSwitcher = ({
           </div>
         ) : (
           <>
+            <TabsContent value="overview" className="mt-0">
+              <ProjectOverview data={analytics} />
+            </TabsContent>
             <TabsContent value="table" className="mt-0">
               <DataTable
                 columns={columns(hideProject)}

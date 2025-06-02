@@ -5,14 +5,12 @@ import { SettingsIcon, UsersIcon } from "lucide-react";
 
 import { useProjectId } from "@/features/projects/hooks/use-project-id";
 import { useGetProject } from "@/features/projects/api/use-get-project";
-import { useGetProjectAnalytics } from "@/features/projects/api/use-get-project-analytics";
 import { ProjectAvatar } from "@/features/projects/components/project-avatar";
 import { TaskViewSwitcher } from "@/features/tasks/components/task-view-switcher";
 import { useGetCurrentProjectMember } from "@/features/members/project/api/use-get-current-project-member";
 import { isProjectManager } from "@/features/members/project/utils";
 
 import { Button } from "@/components/ui/button";
-import { Analytics } from "@/components/analytics";
 import { PageLoader } from "@/components/page-loader";
 import { PageError } from "@/components/page-error";
 
@@ -22,11 +20,6 @@ export const ProjectIdClient = () => {
     projectId,
   });
 
-  const { data: analytics, isLoading: isLoadingAnalytics } =
-    useGetProjectAnalytics({
-      projectId,
-    });
-
   const { data: currentMember, isLoading: isLoadingMember } =
     useGetCurrentProjectMember({
       projectId,
@@ -34,7 +27,7 @@ export const ProjectIdClient = () => {
       enabled: !!projectId && !!project?.workspaceId,
     });
 
-  const isLoading = isLoadingProject || isLoadingAnalytics || isLoadingMember;
+  const isLoading = isLoadingProject || isLoadingMember;
 
   if (isLoading) {
     return <PageLoader />;
@@ -78,7 +71,6 @@ export const ProjectIdClient = () => {
           </Button>
         </div>
       </div>
-      {analytics ? <Analytics data={analytics} /> : null}
       <TaskViewSwitcher hideProject />
     </div>
   );

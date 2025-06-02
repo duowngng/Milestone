@@ -11,14 +11,16 @@ import {
   PROJECT_MEMBERS_ID,
   PROJECTS_ID,
   TASKS_ID,
+  WORKSPACE_MEMBERS_ID,
 } from "@/config";
 import { getWorkspaceMember } from "@/features/members/workspace/utils";
 import { MemberRole } from "@/features/members/types";
-import { TaskStatus } from "@/features/tasks/types";
+import { Task, TaskStatus } from "@/features/tasks/types";
 
 import { createProjectSchema, updateProjectSchema } from "../schemas";
 import { Project } from "../types";
 import { getProjectMember } from "@/features/members/project/utils";
+import { createAdminClient } from "@/lib/appwrite";
 
 const app = new Hono()
   .get(
@@ -267,106 +269,270 @@ const app = new Hono()
       PROJECTS_ID,
       projectId
     );
-
-    const member = await getWorkspaceMember({
+    const workspaceMember = await getWorkspaceMember({
       databases,
       workspaceId: project.workspaceId,
       userId: user.$id,
     });
-
-    if (!member) {
+    if (!workspaceMember) {
       return c.json({ message: "Unauthorized" }, 401);
+    }
+    if (workspaceMember.role !== MemberRole.MANAGER) {
+      const projectMember = await getProjectMember({
+        databases,
+        projectId,
+        userId: user.$id,
+      });
+      if (!projectMember) {
+        return c.json({ message: "Unauthorized" }, 401);
+      }
     }
 
     const now = new Date();
+
     const thisMonthStart = startOfMonth(now);
     const thisMonthEnd = endOfMonth(now);
     const lastMonthStart = startOfMonth(subMonths(now, 1));
     const lastMonthEnd = endOfMonth(subMonths(now, 1));
+    const batchSize = 100;
 
-    const thisMonthTasks = await databases.listDocuments(
-      DATABASE_ID,
-      TASKS_ID,
-      [
+    let thisMonthOffset = 0;
+    let thisMonthTasks: Task[] = [];
+    let thisMonthTaskCount = 0;
+
+    while (true) {
+      const batch = await databases.listDocuments<Task>(DATABASE_ID, TASKS_ID, [
         Query.equal("projectId", projectId),
         Query.greaterThanEqual("startDate", thisMonthStart.toISOString()),
         Query.lessThanEqual("startDate", thisMonthEnd.toISOString()),
-      ]
-    );
+        Query.limit(batchSize),
+        Query.offset(thisMonthOffset),
+      ]);
 
-    const lastMonthTasks = await databases.listDocuments(
-      DATABASE_ID,
-      TASKS_ID,
-      [
+      thisMonthTasks = thisMonthTasks.concat(batch.documents);
+
+      if (thisMonthOffset === 0) {
+        thisMonthTaskCount = batch.total;
+      }
+
+      if (batch.documents.length < batchSize) {
+        break;
+      }
+
+      thisMonthOffset += batchSize;
+    }
+
+    let lastMonthOffset = 0;
+    let lastMonthTasks: Task[] = [];
+    let lastMonthTaskCount = 0;
+
+    while (true) {
+      const batch = await databases.listDocuments<Task>(DATABASE_ID, TASKS_ID, [
         Query.equal("projectId", projectId),
         Query.greaterThanEqual("startDate", lastMonthStart.toISOString()),
         Query.lessThanEqual("startDate", lastMonthEnd.toISOString()),
-      ]
+        Query.limit(batchSize),
+        Query.offset(lastMonthOffset),
+      ]);
+
+      lastMonthTasks = lastMonthTasks.concat(batch.documents);
+
+      if (lastMonthOffset === 0) {
+        lastMonthTaskCount = batch.total;
+      }
+
+      if (batch.documents.length < batchSize) {
+        break;
+      }
+
+      lastMonthOffset += batchSize;
+    }
+
+    const monthlyTaskCount = thisMonthTaskCount;
+    const monthlyTaskDifference = thisMonthTaskCount - lastMonthTaskCount;
+
+    const thisMonthAssignedTasks = thisMonthTasks.filter(
+      (task) => task.assigneeId === workspaceMember.$id
     );
-
-    const taskCount = thisMonthTasks.total;
-    const taskDifferece = taskCount - lastMonthTasks.total;
-
-    const thisMonthAssignedTasks = thisMonthTasks.documents.filter(
-      (task) => task.assigneeId === member.$id
+    const lastMonthAssignedTasks = lastMonthTasks.filter(
+      (task) => task.assigneeId === workspaceMember.$id
     );
+    const monthlyAssignedTaskCount = thisMonthAssignedTasks.length;
+    const monthlyAssignedTaskDifference =
+      monthlyAssignedTaskCount - lastMonthAssignedTasks.length;
 
-    const lastMonthAssignedTasks = lastMonthTasks.documents.filter(
-      (task) => task.assigneeId === member.$id
-    );
-
-    const assignedTaskCount = thisMonthAssignedTasks.length;
-    const assignedTaskDifferece =
-      assignedTaskCount - lastMonthAssignedTasks.length;
-
-    const thisMonthIncompleteTasks = thisMonthTasks.documents.filter(
+    const thisMonthIncompleteTasks = thisMonthTasks.filter(
       (task) => task.status !== TaskStatus.DONE
     );
-
-    const lastMonthIncompleteTasks = lastMonthTasks.documents.filter(
+    const lastMonthIncompleteTasks = lastMonthTasks.filter(
       (task) => task.status !== TaskStatus.DONE
     );
+    const monthlyIncompleteTaskCount = thisMonthIncompleteTasks.length;
+    const monthlyIncompleteTaskDifference =
+      monthlyIncompleteTaskCount - lastMonthIncompleteTasks.length;
 
-    const incompleteTaskCount = thisMonthIncompleteTasks.length;
-    const incompleteTaskDifferece =
-      incompleteTaskCount - lastMonthIncompleteTasks.length;
-
-    const thisMonthCompletedTasks = thisMonthTasks.documents.filter(
+    const thisMonthCompletedTasks = thisMonthTasks.filter(
       (task) => task.status === TaskStatus.DONE
     );
-
-    const lastMonthCompletedTasks = lastMonthTasks.documents.filter(
+    const lastMonthCompletedTasks = lastMonthTasks.filter(
       (task) => task.status === TaskStatus.DONE
     );
+    const monthlyCompletedTaskCount = thisMonthCompletedTasks.length;
+    const monthlyCompletedTaskDifference =
+      monthlyCompletedTaskCount - lastMonthCompletedTasks.length;
 
-    const completedTaskCount = thisMonthCompletedTasks.length;
-    const completedTaskDifferece =
-      completedTaskCount - lastMonthCompletedTasks.length;
-
-    const thisMonthOverdueTasks = thisMonthTasks.documents.filter(
+    const thisMonthOverdueTasks = thisMonthTasks.filter(
       (task) => new Date(task.dueDate) < now && task.status !== TaskStatus.DONE
     );
-
-    const lastMonthOverdueTasks = lastMonthTasks.documents.filter(
+    const lastMonthOverdueTasks = lastMonthTasks.filter(
       (task) => new Date(task.dueDate) < now && task.status !== TaskStatus.DONE
     );
+    const monthlyOverdueTaskCount = thisMonthOverdueTasks.length;
+    const monthlyOverdueTaskDifference =
+      monthlyOverdueTaskCount - lastMonthOverdueTasks.length;
 
-    const overdueTaskCount = thisMonthOverdueTasks.length;
-    const overdueTaskDifferece =
-      overdueTaskCount - lastMonthOverdueTasks.length;
+    // Project tasks count
+    let offset = 0;
+    let allTasks: Task[] = [];
+    let totalTaskCount = 0;
+
+    while (true) {
+      const batch = await databases.listDocuments<Task>(DATABASE_ID, TASKS_ID, [
+        Query.equal("projectId", projectId),
+        Query.limit(batchSize),
+        Query.offset(offset),
+      ]);
+
+      allTasks = allTasks.concat(batch.documents);
+
+      if (offset === 0) {
+        totalTaskCount = batch.total;
+      }
+
+      if (batch.documents.length < batchSize) {
+        break;
+      }
+
+      offset += batchSize;
+    }
+
+    const totalCompletedTaskCount = allTasks.filter(
+      (t) => t.status === TaskStatus.DONE
+    ).length;
+    const totalOverdueTaskCount = allTasks.filter(
+      (t) => new Date(t.dueDate) < now && t.status !== TaskStatus.DONE
+    ).length;
+    const totalOnTimeTaskCount =
+      totalTaskCount - totalCompletedTaskCount - totalOverdueTaskCount;
+
+    // Group tasks by status
+    const groupByStatus: Record<string, number> = {};
+    for (const t of allTasks) {
+      const key = t.status;
+      if (!groupByStatus[key]) {
+        groupByStatus[key] = 0;
+      }
+      groupByStatus[key]++;
+    }
+
+    // 4. Group tasks by priority
+    const groupByPriority: Record<string, number> = {};
+    for (const t of allTasks) {
+      const key = t.priority;
+      if (!groupByPriority[key]) {
+        groupByPriority[key] = 0;
+      }
+      groupByPriority[key]++;
+    }
+
+    // Team workload and progress
+    type WorkloadItem = {
+      total: number;
+      completed: number;
+      onTime: number;
+      overdue: number;
+      assignee?: {
+        name: string;
+        email: string;
+        userId: string;
+      };
+    };
+    const workloadMap: Record<string, WorkloadItem> = {};
+
+    for (const t of allTasks) {
+      const assignee = t.assigneeId;
+      if (!workloadMap[assignee]) {
+        workloadMap[assignee] = {
+          total: 0,
+          completed: 0,
+          onTime: 0,
+          overdue: 0,
+        };
+      }
+      workloadMap[assignee].total++;
+
+      if (t.status === TaskStatus.DONE) {
+        workloadMap[assignee].completed++;
+      } else {
+        if (new Date(t.dueDate) < now) {
+          workloadMap[assignee].overdue++;
+        } else {
+          workloadMap[assignee].onTime++;
+        }
+      }
+    }
+
+    const { users } = await createAdminClient();
+    const assigneeIds = Object.keys(workloadMap);
+
+    const members = await databases.listDocuments(
+      DATABASE_ID,
+      WORKSPACE_MEMBERS_ID,
+      assigneeIds.length > 0 ? [Query.contains("$id", assigneeIds)] : []
+    );
+
+    await Promise.all(
+      members.documents.map(async (member) => {
+        if (workloadMap[member.$id]) {
+          const user = await users.get(member.userId);
+          workloadMap[member.$id].assignee = {
+            name: user.name || user.email,
+            email: user.email,
+            userId: user.$id,
+          };
+        }
+      })
+    );
 
     return c.json({
       data: {
-        taskCount,
-        taskDifferece,
-        assignedTaskCount,
-        assignedTaskDifferece,
-        incompleteTaskCount,
-        incompleteTaskDifferece,
-        completedTaskCount,
-        completedTaskDifferece,
-        overdueTaskCount,
-        overdueTaskDifferece,
+        monthlyTaskCount,
+        monthlyTaskDifference,
+
+        monthlyAssignedTaskCount,
+        monthlyAssignedTaskDifference,
+
+        monthlyIncompleteTaskCount,
+        monthlyIncompleteTaskDifference,
+
+        monthlyCompletedTaskCount,
+        monthlyCompletedTaskDifference,
+
+        monthlyOverdueTaskCount,
+        monthlyOverdueTaskDifference,
+
+        totalTaskCount,
+        totalCompletedTaskCount,
+        totalOnTimeTaskCount,
+        totalOverdueTaskCount,
+
+        groupByStatus,
+        groupByPriority,
+
+        workload: Object.entries(workloadMap).map(([assigneeId, item]) => ({
+          assigneeId,
+          ...item,
+        })),
       },
     });
   });
