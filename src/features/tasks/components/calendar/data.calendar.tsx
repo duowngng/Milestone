@@ -142,7 +142,6 @@ export const DataCalendar = ({
 
   const allEvents = [...milestoneEvents, ...taskEvents];
 
-  console.log("allEvents", allEvents);
   const handleNavigate = (action: "PREV" | "NEXT" | "TODAY") => {
     if (action === "PREV") {
       setValue(subMonths(value, 1));

@@ -46,7 +46,7 @@ export const AdminTasksClient = () => {
 
   return (
     <div className="h-fit flex flex-col border rounded-lg p-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-2">
         <h1 className="text-2xl font-bold">Tasks ({data?.total})</h1>
         <Button onClick={() => open()} size="sm" className="w-full lg:w-auto">
           <PlusIcon className="size-4 mr-2" />

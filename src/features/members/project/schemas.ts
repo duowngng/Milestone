@@ -6,6 +6,11 @@ export const createProjectMembersSchema = z.object({
   userIds: z.array(z.string()).min(1),
 });
 
+export const adminCreateProjectMembersSchema = z.object({
+  projectId: z.string().min(1),
+  userIds: z.array(z.string()).min(1),
+});
+
 export const adminUpdateProjectMemberSchema = z.object({
   userId: z.string().trim().min(1).optional(),
   projectId: z.string(),

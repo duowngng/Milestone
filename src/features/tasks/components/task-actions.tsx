@@ -37,7 +37,7 @@ export const TaskActions = ({
 
   const { open } = useEditTaskModal();
 
-  const { canDeleteTask, isLoading } = useCanManageTask({
+  const { canDeleteTask, canEditLimitedFields, isLoading } = useCanManageTask({
     task: providedTask,
   });
 
@@ -89,8 +89,18 @@ export const TaskActions = ({
             </DropdownMenuItem>
           )}
           <DropdownMenuItem
-            onClick={() => open(id)}
-            className="font-medium p-[10px]"
+            disabled={isLoading}
+            onClick={() => {
+              if (!canEditLimitedFields || isLoading) {
+                return;
+              }
+              open(id);
+            }}
+            className={cn(
+              "font-medium p-[10px]",
+              (!canEditLimitedFields || isLoading) &&
+                "opacity-50 cursor-not-allowed"
+            )}
           >
             <PencilIcon className="size-4 mr-2 stroke-2" />
             Edit Task

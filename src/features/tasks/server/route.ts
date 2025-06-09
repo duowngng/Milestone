@@ -369,8 +369,14 @@ const app = new Hono()
         return c.json({ error: "Unauthorized" }, 401);
       }
 
-      if (projectMember.role !== MemberRole.MANAGER) {
-        // Regular members can only update status, progress, and position
+      const isManager = projectMember.role === MemberRole.MANAGER;
+      const isAssignee = existingTask.assigneeId === workspaceMember.$id;
+
+      if (!isManager && !isAssignee) {
+        return c.json({ error: "Unauthorized" }, 403);
+      }
+
+      if (!isManager) {
         const restrictedFieldsUpdated = [
           name !== undefined,
           projectId !== undefined,
@@ -512,6 +518,14 @@ const app = new Hono()
 
     if (!member || member.role !== MemberRole.MANAGER) {
       return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const histories = await databases.listDocuments(DATABASE_ID, HISTORIES_ID, [
+      Query.equal("taskId", taskId),
+    ]);
+
+    for (const history of histories.documents) {
+      await databases.deleteDocument(DATABASE_ID, HISTORIES_ID, history.$id);
     }
 
     await databases.deleteDocument(DATABASE_ID, TASKS_ID, taskId);

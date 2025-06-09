@@ -3,7 +3,7 @@ import { getCurrent } from "@/features/auth/queries";
 import { ProjectIdSettingsClient } from "./client";
 
 const ProjectIdSettingsPage = async () => {
-  const user = getCurrent();
+  const user = await getCurrent();
   if (!user) {
     redirect("sign-in");
   }

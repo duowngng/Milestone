@@ -168,8 +168,6 @@ const app = new Hono()
       const { memberId } = c.req.param();
       const { role, workspaceId, userId } = c.req.valid("form");
 
-      console.log(memberId);
-
       const memberToUpdate = await databases.getDocument(
         DATABASE_ID,
         WORKSPACE_MEMBERS_ID,
