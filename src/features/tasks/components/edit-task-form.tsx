@@ -38,6 +38,7 @@ interface EditTaskFormProps {
   project: { id: string; name: string; imageUrl: string };
   memberOptions: { id: string; name: string }[];
   initialValues: Task;
+  isManager?: boolean;
 }
 
 export const EditTaskForm = ({
@@ -45,6 +46,7 @@ export const EditTaskForm = ({
   project,
   memberOptions,
   initialValues,
+  isManager = false,
 }: EditTaskFormProps) => {
   const { mutate, isPending } = useUpdateTask();
 
@@ -88,101 +90,131 @@ export const EditTaskForm = ({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <div className="flex flex-col gap-y-4">
-              <FormField
-                control={form.control}
-                name="projectId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Project</FormLabel>
-                    <FormControl>
-                      <div className="flex h-12 w-full items-center rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm cursor-not-allowed">
-                        <div className="flex items-center gap-x-2">
-                          <ProjectAvatar
-                            className="size-6"
-                            name={project.name}
-                            image={project.imageUrl}
-                          />
-                          <span>{project.name}</span>
-                        </div>
-                      </div>
-                    </FormControl>
-                    <Input {...field} type="hidden" />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Task Name</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Enter task name" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="startDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Start Date</FormLabel>
-                    <FormControl>
-                      <DatePicker {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="dueDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Due Date</FormLabel>
-                    <FormControl>
-                      <DatePicker {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="assigneeId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Assignee</FormLabel>
-                    <Select
-                      defaultValue={field.value}
-                      onValueChange={field.onChange}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select assignee" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <FormMessage />
-                      <SelectContent>
-                        {memberOptions.map((member) => (
-                          <SelectItem key={member.id} value={member.id}>
+              {isManager && (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="projectId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Project</FormLabel>
+                        <FormControl>
+                          <div className="flex h-12 w-full items-center rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm cursor-not-allowed">
                             <div className="flex items-center gap-x-2">
-                              <MemberAvatar
-                                name={member.name}
+                              <ProjectAvatar
                                 className="size-6"
+                                name={project.name}
+                                image={project.imageUrl}
                               />
-                              {member.name}
+                              <span>{project.name}</span>
                             </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormItem>
-                )}
-              />
+                          </div>
+                        </FormControl>
+                        <Input {...field} type="hidden" />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Task Name</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Enter task name" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="startDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Start Date</FormLabel>
+                        <FormControl>
+                          <DatePicker {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="dueDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Due Date</FormLabel>
+                        <FormControl>
+                          <DatePicker {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="assigneeId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Assignee</FormLabel>
+                        <Select
+                          defaultValue={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select assignee" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <FormMessage />
+                          <SelectContent>
+                            {memberOptions.map((member) => (
+                              <SelectItem key={member.id} value={member.id}>
+                                <div className="flex items-center gap-x-2">
+                                  <MemberAvatar
+                                    name={member.name}
+                                    className="size-6"
+                                  />
+                                  {member.name}
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="priority"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Priority</FormLabel>
+                        <Select
+                          defaultValue={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select priority" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <FormMessage />
+                          <SelectContent>
+                            <SelectItem value="LOW">Low</SelectItem>
+                            <SelectItem value="MEDIUM">Medium</SelectItem>
+                            <SelectItem value="HIGH">High</SelectItem>
+                            <SelectItem value="URGENT">Urgent</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
               <FormField
                 control={form.control}
                 name="status"
@@ -211,32 +243,6 @@ export const EditTaskForm = ({
                           In Review
                         </SelectItem>
                         <SelectItem value={TaskStatus.DONE}>Done</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="priority"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Priority</FormLabel>
-                    <Select
-                      defaultValue={field.value}
-                      onValueChange={field.onChange}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select priority" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <FormMessage />
-                      <SelectContent>
-                        <SelectItem value="LOW">Low</SelectItem>
-                        <SelectItem value="MEDIUM">Medium</SelectItem>
-                        <SelectItem value="HIGH">High</SelectItem>
-                        <SelectItem value="URGENT">Urgent</SelectItem>
                       </SelectContent>
                     </Select>
                   </FormItem>

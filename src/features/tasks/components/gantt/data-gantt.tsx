@@ -1,6 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { client } from "@/lib/rpc";
 import { useRouter } from "next/navigation";
 import { ExternalLinkIcon, PencilIcon, TrashIcon } from "lucide-react";
 import { differenceInDays, parseISO } from "date-fns";
@@ -37,18 +39,13 @@ import { Milestone } from "@/features/milestones/types";
 import { useCreateMilestoneModal } from "@/features/milestones/hooks/use-create-milestone-modal";
 import { useEditMilestoneModal } from "@/features/milestones/hooks/use-edit-milestone-modal";
 import { useDeleteMilestone } from "@/features/milestones/api/use-delete-milestone";
+import { isProjectManager } from "@/features/members/project/utils";
 
 import { useCreateTaskModal } from "../../hooks/use-create-task-modal";
 import { useEditTaskModal } from "../../hooks/use-edit-task-modal";
 import { useDeleteTask } from "../../api/use-delete-task";
 import { useUpdateTask } from "../../api/use-update-task";
 import { Task, TaskStatus } from "../../types";
-
-interface DataGanttProps {
-  data: Task[];
-  milestones?: Milestone[];
-  isManager?: boolean;
-}
 
 const statusColorMap: Record<TaskStatus, string> = {
   [TaskStatus.BACKLOG]: "#ec4899",
@@ -164,18 +161,31 @@ const makeMilestoneMapper = (
   };
 };
 
+interface DataGanttProps {
+  data: Task[];
+  milestones?: Milestone[];
+  canCreateTasks?: boolean;
+  canManageMilestones?: boolean;
+}
+
 export function DataGantt({
   data,
   milestones = [],
-  isManager,
+  canCreateTasks,
+  canManageMilestones,
 }: DataGanttProps) {
   const router = useRouter();
   const workspaceId = useWorkspaceId();
   const paramProjectId = useProjectId();
+  const queryClient = useQueryClient();
   const { open } = useCreateTaskModal();
   const editTask = useEditTaskModal();
   const editMilestone = useEditMilestoneModal();
   const { open: openCreateMilestone } = useCreateMilestoneModal();
+
+  const [taskPermissions, setTaskPermissions] = useState<
+    Record<string, boolean>
+  >({});
 
   const [ConfirmDialog, confirm] = useConfirm(
     "Delete task",
@@ -238,6 +248,64 @@ export function DataGantt({
     [grouped, projectMap]
   );
 
+  useEffect(() => {
+    if (paramProjectId) return;
+
+    const uniqueProjectIds = Array.from(
+      new Set(data.map((task) => task.projectId))
+    );
+
+    const fetchProjectRoles = async () => {
+      const permissions: Record<string, boolean> = {};
+
+      await Promise.all(
+        uniqueProjectIds.map(async (projectId) => {
+          try {
+            const response = await client.api.members.project.current.$get({
+              query: { workspaceId, projectId },
+            });
+
+            if (response.ok) {
+              const { data: memberData } = await response.json();
+              permissions[projectId] = isProjectManager(memberData);
+
+              queryClient.setQueryData(
+                ["currentProjectMember", workspaceId, projectId],
+                memberData
+              );
+            } else {
+              permissions[projectId] = false;
+            }
+          } catch (error) {
+            console.error(
+              `Error fetching permissions for project ${projectId}:`,
+              error
+            );
+            permissions[projectId] = false;
+          }
+        })
+      );
+
+      setTaskPermissions(permissions);
+    };
+
+    fetchProjectRoles();
+  }, [data, paramProjectId, workspaceId, queryClient]);
+
+  const canDeleteTask = useCallback(
+    (taskId: string): boolean => {
+      const task = data.find((t) => t.$id === taskId);
+      if (!task) return false;
+
+      if (paramProjectId) {
+        return !!canCreateTasks;
+      }
+
+      return !!taskPermissions[task.projectId];
+    },
+    [data, paramProjectId, canCreateTasks, taskPermissions]
+  );
+
   const handleView = (id: string) => {
     const feature = features.find((f) => f.id === id);
     if (!feature) return;
@@ -262,6 +330,8 @@ export function DataGantt({
   };
 
   const handleDelete = async (id: string) => {
+    if (!canDeleteTask(id)) return;
+
     const ok = await confirm();
     if (!ok) return;
 
@@ -291,13 +361,13 @@ export function DataGantt({
   };
 
   const handleAddMarker = (date: Date) => {
-    if (isManager && paramProjectId) {
+    if (canManageMilestones && paramProjectId) {
       openCreateMilestone({ date });
     }
   };
 
   const handleEditMilestone = (id: string) => {
-    if (isManager) {
+    if (canManageMilestones) {
       editMilestone.open(id);
     }
   };
@@ -309,9 +379,12 @@ export function DataGantt({
       <GanttProvider
         range="daily"
         zoom={100}
-        onAddItem={(date: Date) =>
-          open({ projectId: paramProjectId, startDate: date })
-        }
+        {...(canCreateTasks
+          ? {
+              onAddItem: (date: Date) =>
+                open({ projectId: paramProjectId, startDate: date }),
+            }
+          : {})}
         className="border rounded-lg flex-grow h-full max-h-[calc(100dvh-4rem)]"
       >
         <GanttSidebar className="invisible lg:visible">
@@ -412,7 +485,7 @@ export function DataGantt({
                         </ContextMenuItem>
                         <ContextMenuItem
                           onClick={(e) => {
-                            if (!isManager) {
+                            if (!canDeleteTask(f.id)) {
                               e.preventDefault();
                               return;
                             }
@@ -421,7 +494,8 @@ export function DataGantt({
                           className={cn(
                             "font-medium p-[10px]",
                             "text-red-700 focus:text-red-700",
-                            !isManager && "opacity-50 cursor-not-allowed"
+                            !canDeleteTask(f.id) &&
+                              "opacity-50 cursor-not-allowed"
                           )}
                         >
                           <TrashIcon className="size-4 mr-2 stroke-2" />
@@ -447,13 +521,13 @@ export function DataGantt({
                   ? `${marker.label} (${marker.projectName})`
                   : marker.label
               }
-              onEdit={isManager ? handleEditMilestone : undefined}
-              onRemove={isManager ? handleDeleteMilestone : undefined}
+              onEdit={canManageMilestones ? handleEditMilestone : undefined}
+              onRemove={canManageMilestones ? handleDeleteMilestone : undefined}
               className={cn(marker.colorScheme, "hover:font-semibold")}
             />
           ))}
 
-          {isManager && (
+          {canManageMilestones && (
             <GanttCreateMarkerTrigger onCreateMarker={handleAddMarker} />
           )}
         </GanttTimeline>

@@ -41,25 +41,55 @@ const app = new Hono()
         return c.json({ error: "Unauthorized" }, 401);
       }
 
-      if (!projectId && workspaceMember.role !== MemberRole.MANAGER) {
-        return c.json({ error: "Unauthorized" }, 401);
-      }
+      let allowedProjectIds: string[] = [];
 
-      if (projectId) {
-        const projectMember = await getProjectMember({
-          databases,
-          projectId,
-          userId: user.$id,
-        });
+      if (workspaceMember.role !== MemberRole.MANAGER) {
+        if (projectId) {
+          const projectMember = await getProjectMember({
+            databases,
+            projectId,
+            userId: user.$id,
+          });
 
-        if (!projectMember && workspaceMember.role !== MemberRole.MANAGER) {
-          return c.json({ error: "Unauthorized" }, 401);
+          if (!projectMember) {
+            return c.json({ error: "Unauthorized" }, 401);
+          }
+
+          allowedProjectIds = [projectId];
+        } else {
+          const allProjects = await databases.listDocuments<Project>(
+            DATABASE_ID,
+            PROJECTS_ID,
+            [Query.equal("workspaceId", workspaceId)]
+          );
+
+          const memberChecks = await Promise.all(
+            allProjects.documents.map((project) =>
+              getProjectMember({
+                databases,
+                projectId: project.$id,
+                userId: user.$id,
+              }).then((member) => (member ? project.$id : null))
+            )
+          );
+
+          allowedProjectIds = memberChecks.filter((id): id is string => !!id);
+
+          if (allowedProjectIds.length === 0) {
+            return c.json({ error: "Unauthorized" }, 401);
+          }
+        }
+      } else {
+        if (projectId) {
+          allowedProjectIds = [projectId];
         }
       }
 
       const queries = [
         Query.equal("workspaceId", workspaceId),
-        ...(projectId ? [Query.equal("projectId", projectId)] : []),
+        ...(allowedProjectIds.length > 0
+          ? [Query.contains("projectId", allowedProjectIds)]
+          : []),
         Query.orderDesc("date"),
       ];
 
@@ -83,7 +113,6 @@ const app = new Hono()
         const project = projects.documents.find(
           (p) => p.$id === milestone.projectId
         );
-
         return {
           ...milestone,
           project,

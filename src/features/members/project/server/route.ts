@@ -70,24 +70,54 @@ const app = new Hono()
         projectMembers = result.documents;
       } else {
         if (isManager) {
-          const result = await databases.listDocuments<ProjectMember>(
+          const projects = await databases.listDocuments<Project>(
             DATABASE_ID,
-            PROJECT_MEMBERS_ID,
+            PROJECTS_ID,
             [Query.equal("workspaceId", workspaceId)]
           );
-          projectMembers = result.documents;
-        } else {
-          const myProjects = await databases.listDocuments<ProjectMember>(
-            DATABASE_ID,
-            PROJECT_MEMBERS_ID,
-            [Query.equal("userId", user.$id)]
-          );
 
-          if (myProjects.documents.length === 0) {
+          if (projects.documents.length === 0) {
             return c.json({ data: { documents: [], total: 0 } });
           }
 
-          const projectIds = myProjects.documents.map((pm) => pm.projectId);
+          const projectIds = projects.documents.map((project) => project.$id);
+
+          const result = await databases.listDocuments<ProjectMember>(
+            DATABASE_ID,
+            PROJECT_MEMBERS_ID,
+            [Query.equal("projectId", projectIds)]
+          );
+
+          projectMembers = result.documents;
+        } else {
+          const userProjectMember =
+            await databases.listDocuments<ProjectMember>(
+              DATABASE_ID,
+              PROJECT_MEMBERS_ID,
+              [Query.equal("userId", user.$id)]
+            );
+
+          if (userProjectMember.documents.length === 0) {
+            return c.json({ data: { documents: [], total: 0 } });
+          }
+
+          const projectIds = await (async () => {
+            const ids = userProjectMember.documents.map((pm) => pm.projectId);
+
+            const userProjects = await databases.listDocuments<Project>(
+              DATABASE_ID,
+              PROJECTS_ID,
+              [Query.equal("$id", ids)]
+            );
+
+            return userProjects.documents
+              .filter((p) => p.workspaceId === workspaceId)
+              .map((p) => p.$id);
+          })();
+
+          if (projectIds.length === 0) {
+            return c.json({ data: { documents: [], total: 0 } });
+          }
 
           const result = await databases.listDocuments<ProjectMember>(
             DATABASE_ID,

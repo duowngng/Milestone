@@ -1,14 +1,18 @@
+import { useMemo } from "react";
+import { Loader } from "lucide-react";
+
 import { Card, CardContent } from "@/components/ui/card";
+
 import { useGetMembers } from "@/features/members/workspace/api/use-get-members";
 import { useGetProjectMembers } from "@/features/members/project/api/use-get-project-members";
 import { useGetProject } from "@/features/projects/api/use-get-project";
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
-import { Loader } from "lucide-react";
+import { useGetCurrentProjectMember } from "@/features/members/project/api/use-get-current-project-member";
+import { isProjectManager } from "@/features/members/project/utils";
 
 import { EditTaskForm } from "./edit-task-form";
 
 import { useGetTask } from "../api/use-get-task";
-import { useMemo } from "react";
 
 interface EditTaskFormWrapperProps {
   onCancel: () => void;
@@ -34,6 +38,12 @@ export const EditTaskFormWrapper = ({
     useGetProjectMembers({
       workspaceId,
       projectId: initialValues?.projectId,
+    });
+  const { data: currentMember, isLoading: isLoadingCurrentMember } =
+    useGetCurrentProjectMember({
+      projectId: initialValues?.projectId || "",
+      workspaceId: project?.workspaceId || "",
+      enabled: !!initialValues?.projectId && !!project?.workspaceId,
     });
 
   const memberOptions = useMemo(() => {
@@ -62,7 +72,10 @@ export const EditTaskFormWrapper = ({
     isLoadingProject ||
     isLoadingMembers ||
     isLoadingProjectMembers ||
+    isLoadingCurrentMember ||
     isLoadingTask;
+
+  const isManager = currentMember ? isProjectManager(currentMember) : false;
 
   if (isLoading) {
     return (
@@ -89,6 +102,7 @@ export const EditTaskFormWrapper = ({
           imageUrl: project?.imageUrl || "",
         }}
         memberOptions={memberOptions ?? []}
+        isManager={isManager}
       />
     </div>
   );

@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 import { useProjectId } from "@/features/projects/hooks/use-project-id";
+import { useGetManagedProjects } from "@/features/projects/hooks/use-get-managed-projects";
 import { useGetCurrentMember } from "@/features/members/workspace/api/use-get-current-member";
 import { isWorkspaceManager } from "@/features/members/workspace/utils";
 import { useGetCurrentProjectMember } from "@/features/members/project/api/use-get-current-project-member";
@@ -57,6 +58,11 @@ export const TaskViewSwitcher = ({
   const workspaceId = useWorkspaceId();
   const paramProjectId = useProjectId();
   const { open } = useCreateTaskModal();
+
+  const { data: managedProjects, isLoading: isLoadingManagedProjects } =
+    useGetManagedProjects({
+      workspaceId,
+    });
 
   const { data: workspaceMember } = useGetCurrentMember({
     workspaceId,
@@ -107,7 +113,12 @@ export const TaskViewSwitcher = ({
     [bulkUpdate]
   );
 
-  const isLoading = isLoadingTasks || isLoadingMilestones;
+  const isLoading =
+    isLoadingTasks || isLoadingMilestones || isLoadingManagedProjects;
+
+  const canCreateTasks = paramProjectId
+    ? isUserProjectManager
+    : managedProjects.length > 0;
 
   return (
     <Tabs
@@ -132,20 +143,22 @@ export const TaskViewSwitcher = ({
               Timeline
             </TabsTrigger>
           </TabsList>
-          <Button
-            onClick={() => open({ projectId: paramProjectId })}
-            size="sm"
-            className="w-full lg:w-auto"
-          >
-            <PlusIcon className="size-4 mr-2" />
-            New
-          </Button>
+          {canCreateTasks && (
+            <Button
+              onClick={() => open({ projectId: paramProjectId })}
+              size="sm"
+              className="w-full lg:w-auto"
+            >
+              <PlusIcon className="size-4 mr-2" />
+              New
+            </Button>
+          )}
         </div>
         <DottedSeparator className="my-4" />
         <DataFilter
           hideProject={hideProject}
           memberId={memberId}
-          isAdmin={isUserProjectManager || isUserWorkspaceManager}
+          isManager={isUserProjectManager || isUserWorkspaceManager}
         />
         <DottedSeparator className="my-4" />
       </div>
@@ -159,7 +172,7 @@ export const TaskViewSwitcher = ({
           <>
             <TabsContent value="table" className="mt-0">
               <DataTable
-                columns={columns(isUserProjectManager, hideProject)}
+                columns={columns(hideProject)}
                 data={tasks?.documents ?? []}
               />
             </TabsContent>
@@ -168,20 +181,22 @@ export const TaskViewSwitcher = ({
                 data={tasks?.documents ?? []}
                 onChange={onKanbanChange}
                 hideProject={hideProject}
+                canCreateTasks={canCreateTasks}
               />
             </TabsContent>
             <TabsContent value="calendar" className="mt-0 h-full pb-4">
               <DataCalendar
                 data={tasks?.documents ?? []}
                 milestones={milestones?.documents ?? []}
-                isAdmin={isUserWorkspaceManager || isUserProjectManager}
+                canManageMilestones={isUserProjectManager}
               />
             </TabsContent>
             <TabsContent value="gantt" className="mt-0 h-full pb-4">
               <DataGantt
                 data={tasks?.documents ?? []}
-                isManager={isUserProjectManager}
                 milestones={milestones?.documents ?? []}
+                canCreateTasks={canCreateTasks}
+                canManageMilestones={isUserProjectManager}
               />
             </TabsContent>
           </>
