@@ -2,6 +2,7 @@ import { CreateAdminWorkspaceModal } from "@/features/workspaces/components/admi
 import { CreateAdminMemberModal } from "@/features/members/workspace/components/admin/create-admin-member-modal";
 import { CreateAdminProjectModal } from "@/features/projects/components/admin/create-admin-project-modal";
 import { CreateAdminTaskModal } from "@/features/tasks/components/admin/create-admin-task-modal";
+import { AddMemberModal } from "@/features/members/project/components/admin/add-admin-member-modal";
 import { EditAdminWorkspaceModal } from "@/features/workspaces/components/admin/edit-admin-workspace-modal";
 import { EditAdminMemberModal } from "@/features/members/workspace/components/admin/edit-admin-member-modal";
 import { EditAdminProjectModal } from "@/features/projects/components/admin/edit-admin-project-modal";
@@ -22,6 +23,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       <CreateAdminMemberModal />
       <CreateAdminProjectModal />
       <CreateAdminTaskModal />
+      <AddMemberModal />
       <EditAdminWorkspaceModal />
       <EditAdminMemberModal />
       <EditAdminProjectModal />

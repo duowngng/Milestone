@@ -1,7 +1,8 @@
 "use client";
 
-import { z } from "zod";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { DottedSeparator } from "@/components/dotted-separator";
@@ -30,12 +31,14 @@ import { MemberRole } from "@/features/members/types";
 interface CreateAdminMemberFormProps {
   users: { id: string; name: string }[];
   workspaces: { id: string; name: string }[];
+  initialWorkspaceId?: string;
   onCancel?: () => void;
 }
 
 export const CreateAdminMemberForm = ({
   users,
   workspaces,
+  initialWorkspaceId,
   onCancel,
 }: CreateAdminMemberFormProps) => {
   const { mutate, isPending } = useCreateMember();
@@ -44,10 +47,16 @@ export const CreateAdminMemberForm = ({
     resolver: zodResolver(adminCreateMemberSchema),
     defaultValues: {
       userId: "",
-      workspaceId: "",
+      workspaceId: initialWorkspaceId || "",
       role: MemberRole.MEMBER,
     },
   });
+
+  useEffect(() => {
+    if (initialWorkspaceId) {
+      form.setValue("workspaceId", initialWorkspaceId);
+    }
+  }, [initialWorkspaceId, form]);
 
   const onSubmit = (values: z.infer<typeof adminCreateMemberSchema>) => {
     mutate(
@@ -110,6 +119,7 @@ export const CreateAdminMemberForm = ({
                       <Select
                         value={field.value}
                         onValueChange={field.onChange}
+                        disabled={!!initialWorkspaceId}
                       >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select a workspace" />

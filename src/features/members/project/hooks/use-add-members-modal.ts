@@ -6,6 +6,9 @@ export const useAddMembersModal = () => {
     parseAsBoolean.withDefault(false).withOptions({ clearOnDefault: true })
   );
 
+  const [initialProjectId, setInitialProjectId] =
+    useQueryState("initialProjectId");
+
   const open = () => {
     setIsOpen(true);
   };
@@ -18,5 +21,7 @@ export const useAddMembersModal = () => {
     isOpen,
     open,
     close,
+    initialProjectId,
+    setInitialProjectId,
   };
 };

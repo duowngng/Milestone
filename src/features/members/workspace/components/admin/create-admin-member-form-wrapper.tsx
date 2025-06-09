@@ -7,10 +7,12 @@ import { CreateAdminMemberForm } from "./create-admin-member-form";
 
 interface CreateAdminMemberFormWrapperProps {
   onCancel: () => void;
+  initialWorkspaceId?: string;
 }
 
 export const CreateAdminMemberFormWrapper = ({
   onCancel,
+  initialWorkspaceId,
 }: CreateAdminMemberFormWrapperProps) => {
   const { data: usersData, isLoading: isLoadingUsers } = useGetUsers();
   const { data: workspacesData, isLoading: isLoadingWorkspaces } =
@@ -40,6 +42,7 @@ export const CreateAdminMemberFormWrapper = ({
     <CreateAdminMemberForm
       users={userOptions ?? []}
       workspaces={workspaceOptions ?? []}
+      initialWorkspaceId={initialWorkspaceId}
       onCancel={onCancel}
     />
   );

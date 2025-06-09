@@ -307,7 +307,6 @@ const app = new Hono()
     sessionMiddleware,
     zValidator("json", createProjectMembersSchema),
     async (c) => {
-      console.log("POST /members/project/bulk-create", c.req.valid("json"));
       const { projectId, userIds } = c.req.valid("json");
       const databases = c.get("databases");
       const user = c.get("user");

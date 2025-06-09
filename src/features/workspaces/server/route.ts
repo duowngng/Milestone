@@ -11,6 +11,9 @@ import {
   IMAGES_BUCKET_ID,
   TASKS_ID,
   PROJECTS_ID,
+  PROJECT_MEMBERS_ID,
+  MILESTONES_ID,
+  HISTORIES_ID,
 } from "@/config";
 import { sessionMiddleware } from "@/lib/session-middleware";
 
@@ -229,7 +232,27 @@ const app = new Hono()
     ]);
 
     for (const task of tasks.documents) {
+      const histories = await databases.listDocuments(
+        DATABASE_ID,
+        HISTORIES_ID,
+        [Query.equal("taskId", task.$id)]
+      );
+
+      for (const history of histories.documents) {
+        await databases.deleteDocument(DATABASE_ID, HISTORIES_ID, history.$id);
+      }
+
       await databases.deleteDocument(DATABASE_ID, TASKS_ID, task.$id);
+    }
+
+    const milestones = await databases.listDocuments(
+      DATABASE_ID,
+      MILESTONES_ID,
+      [Query.equal("workspaceId", workspaceId)]
+    );
+
+    for (const milestone of milestones.documents) {
+      await databases.deleteDocument(DATABASE_ID, MILESTONES_ID, milestone.$id);
     }
 
     const projects = await databases.listDocuments(DATABASE_ID, PROJECTS_ID, [
@@ -237,7 +260,35 @@ const app = new Hono()
     ]);
 
     for (const project of projects.documents) {
+      const projectMembers = await databases.listDocuments(
+        DATABASE_ID,
+        PROJECT_MEMBERS_ID,
+        [Query.equal("projectId", project.$id)]
+      );
+
+      for (const projectMember of projectMembers.documents) {
+        await databases.deleteDocument(
+          DATABASE_ID,
+          PROJECT_MEMBERS_ID,
+          projectMember.$id
+        );
+      }
+
       await databases.deleteDocument(DATABASE_ID, PROJECTS_ID, project.$id);
+    }
+
+    const workspaceMembers = await databases.listDocuments(
+      DATABASE_ID,
+      WORKSPACE_MEMBERS_ID,
+      [Query.equal("workspaceId", workspaceId)]
+    );
+
+    for (const workspaceMember of workspaceMembers.documents) {
+      await databases.deleteDocument(
+        DATABASE_ID,
+        WORKSPACE_MEMBERS_ID,
+        workspaceMember.$id
+      );
     }
 
     await databases.deleteDocument(DATABASE_ID, WORKSPACES_ID, workspaceId);

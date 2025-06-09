@@ -1,10 +1,11 @@
 "use client";
 
-import { z } from "zod";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { cn } from "@/lib/utils";
 import { Check, X } from "lucide-react";
+import { z } from "zod";
+import { cn } from "@/lib/utils";
 
 import {
   Command,
@@ -27,10 +28,10 @@ import {
 import { DottedSeparator } from "@/components/dotted-separator";
 import { MemberAvatar } from "@/features/members/components/member-avatar";
 
-import { useBulkCreateProjectMembers } from "../api/use-bulk-create-project-members";
-import { createProjectMembersSchema } from "../schemas";
+import { useBulkCreateAdminProjectMembers } from "../../api/admin/use-bulk-create-admin-project-members";
+import { adminCreateProjectMembersSchema } from "../../schemas";
 
-type AddMembersValues = z.infer<typeof createProjectMembersSchema>;
+type AddMembersValues = z.infer<typeof adminCreateProjectMembersSchema>;
 
 interface AddMemberFormProps {
   onCancel?: () => void;
@@ -45,14 +46,20 @@ export const AddMemberForm = ({
   memberOptions,
   currentProjectMembers,
 }: AddMemberFormProps) => {
-  const { mutate, isPending } = useBulkCreateProjectMembers();
+  const { mutate, isPending } = useBulkCreateAdminProjectMembers();
 
   const form = useForm<AddMembersValues>({
-    resolver: zodResolver(createProjectMembersSchema),
+    resolver: zodResolver(adminCreateProjectMembersSchema),
     defaultValues: { projectId, userIds: [] },
   });
 
   const { control, watch, setValue, handleSubmit } = form;
+
+  useEffect(() => {
+    if (projectId) {
+      form.setValue("projectId", projectId);
+    }
+  }, [projectId, form]);
 
   const selectedIds = watch("userIds");
 

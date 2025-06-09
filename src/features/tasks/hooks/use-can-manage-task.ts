@@ -4,6 +4,8 @@ import { useGetCurrentProjectMember } from "@/features/members/project/api/use-g
 import { isProjectManager } from "@/features/members/project/utils";
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 import { ProjectMember } from "@/features/members/types";
+import { useCurrent } from "@/features/auth/api/use-current";
+
 import { Task } from "../types";
 
 interface UseCanManageTaskProps {
@@ -16,6 +18,7 @@ export const useCanManageTask = ({
   projectMember: initialProjectMember,
 }: UseCanManageTaskProps) => {
   const workspaceId = useWorkspaceId();
+  const { data: user, isLoading: isLoadingUser } = useCurrent();
 
   const { data: fetchedProjectMember, isLoading: isLoadingProjectMember } =
     useGetCurrentProjectMember({
@@ -27,7 +30,7 @@ export const useCanManageTask = ({
   const projectMember = initialProjectMember || fetchedProjectMember;
 
   const permissions = useMemo(() => {
-    if (!task) {
+    if (!task || !user) {
       return {
         canViewTask: false,
         canEditAllFields: false,
@@ -41,6 +44,7 @@ export const useCanManageTask = ({
       ? isProjectManager(projectMember)
       : false;
     const isProjectMember = !!projectMember;
+    const isAssignee = task.assignee?.userId === user.$id;
 
     if (isUserProjectManager) {
       return {
@@ -52,11 +56,21 @@ export const useCanManageTask = ({
       };
     }
 
-    if (isProjectMember) {
+    if (isAssignee) {
       return {
         canViewTask: true,
         canEditAllFields: false,
         canEditLimitedFields: true,
+        canManageTask: false,
+        canDeleteTask: false,
+      };
+    }
+
+    if (isProjectMember) {
+      return {
+        canViewTask: true,
+        canEditAllFields: false,
+        canEditLimitedFields: false,
         canManageTask: false,
         canDeleteTask: false,
       };
@@ -69,9 +83,9 @@ export const useCanManageTask = ({
       canManageTask: false,
       canDeleteTask: false,
     };
-  }, [task, projectMember]);
+  }, [task, projectMember, user]);
 
-  const isLoading = isLoadingProjectMember;
+  const isLoading = isLoadingProjectMember || isLoadingUser;
 
   return {
     ...permissions,

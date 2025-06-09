@@ -7,7 +7,9 @@ import { endOfMonth, startOfMonth, subMonths } from "date-fns";
 import { sessionMiddleware } from "@/lib/session-middleware";
 import {
   DATABASE_ID,
+  HISTORIES_ID,
   IMAGES_BUCKET_ID,
+  MILESTONES_ID,
   PROJECT_MEMBERS_ID,
   PROJECTS_ID,
   TASKS_ID,
@@ -252,7 +254,41 @@ const app = new Hono()
     ]);
 
     for (const task of tasks.documents) {
+      const histories = await databases.listDocuments(
+        DATABASE_ID,
+        HISTORIES_ID,
+        [Query.equal("taskId", task.$id)]
+      );
+
+      for (const history of histories.documents) {
+        await databases.deleteDocument(DATABASE_ID, HISTORIES_ID, history.$id);
+      }
+
       await databases.deleteDocument(DATABASE_ID, TASKS_ID, task.$id);
+    }
+
+    const milestones = await databases.listDocuments(
+      DATABASE_ID,
+      MILESTONES_ID,
+      [Query.equal("projectId", projectId)]
+    );
+
+    for (const milestone of milestones.documents) {
+      await databases.deleteDocument(DATABASE_ID, MILESTONES_ID, milestone.$id);
+    }
+
+    const projectMembers = await databases.listDocuments(
+      DATABASE_ID,
+      PROJECT_MEMBERS_ID,
+      [Query.equal("projectId", projectId)]
+    );
+
+    for (const projectMember of projectMembers.documents) {
+      await databases.deleteDocument(
+        DATABASE_ID,
+        PROJECT_MEMBERS_ID,
+        projectMember.$id
+      );
     }
 
     await databases.deleteDocument(DATABASE_ID, PROJECTS_ID, projectId);

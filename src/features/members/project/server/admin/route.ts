@@ -14,6 +14,8 @@ import {
   MemberRole,
 } from "@/features/members/types";
 
+import { adminCreateProjectMembersSchema } from "../../schemas";
+
 const app = new Hono()
   .get(
     "/",
@@ -22,51 +24,33 @@ const app = new Hono()
     zValidator(
       "query",
       z.object({
-        userId: z.string().optional(),
         projectId: z.string().optional(),
-        role: z.nativeEnum(MemberRole).optional(),
-        createdAt: z.string().optional(),
-        updatedAt: z.string().optional(),
       })
     ),
     async (c) => {
       const { users } = await createAdminClient();
       const databases = c.get("databases");
 
-      const { userId, projectId, role, createdAt, updatedAt } =
-        c.req.valid("query");
+      const { projectId } = c.req.valid("query");
 
       const queries = [Query.orderDesc("$createdAt")];
 
-      if (userId) queries.push(Query.equal("userId", userId));
       if (projectId) queries.push(Query.equal("projectId", projectId));
-      if (role) queries.push(Query.equal("role", role));
-
-      if (createdAt) {
-        try {
-          const [from, to] = decodeURIComponent(createdAt).split(",");
-          if (from) queries.push(Query.greaterThanEqual("$createdAt", from));
-          if (to) queries.push(Query.lessThanEqual("$createdAt", to));
-        } catch (error) {
-          console.error("Invalid createdAt format", error);
-        }
-      }
-
-      if (updatedAt) {
-        try {
-          const [from, to] = decodeURIComponent(updatedAt).split(",");
-          if (from) queries.push(Query.greaterThanEqual("$updatedAt", from));
-          if (to) queries.push(Query.lessThanEqual("$updatedAt", to));
-        } catch (error) {
-          console.error("Invalid updatedAt format", error);
-        }
-      }
 
       const projectMembers = await databases.listDocuments(
         DATABASE_ID,
         PROJECT_MEMBERS_ID,
         queries
       );
+
+      if (projectMembers.total === 0) {
+        return c.json({
+          data: {
+            total: 0,
+            documents: [],
+          },
+        });
+      }
 
       const userIds = Array.from(
         new Set(projectMembers.documents.map((m) => m.userId))
@@ -229,6 +213,33 @@ const app = new Hono()
     await databases.deleteDocument(DATABASE_ID, PROJECT_MEMBERS_ID, memberId);
 
     return c.json({ data: { $id: memberToDelete.$id } });
-  });
+  })
+  .post(
+    "/bulk-create",
+    sessionMiddleware,
+    adminMiddleware,
+    zValidator("json", adminCreateProjectMembersSchema),
+    async (c) => {
+      const databases = c.get("databases");
+      const { projectId, userIds } = c.req.valid("json");
+
+      const newMembers = await Promise.all(
+        userIds.map(async (userId) => {
+          return databases.createDocument<ProjectMember>(
+            DATABASE_ID,
+            PROJECT_MEMBERS_ID,
+            ID.unique(),
+            {
+              projectId,
+              userId,
+              role: MemberRole.MEMBER,
+            }
+          );
+        })
+      );
+
+      return c.json({ data: newMembers });
+    }
+  );
 
 export default app;
