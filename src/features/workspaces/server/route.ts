@@ -11,6 +11,9 @@ import {
   IMAGES_BUCKET_ID,
   TASKS_ID,
   PROJECTS_ID,
+  PROJECT_MEMBERS_ID,
+  MILESTONES_ID,
+  HISTORIES_ID,
 } from "@/config";
 import { sessionMiddleware } from "@/lib/session-middleware";
 
@@ -18,7 +21,7 @@ import { generateInviteCode } from "@/lib/utils";
 import { createWorkspaceSchema, updateWorkspaceSchema } from "../schemas";
 
 import { MemberRole } from "@/features/members/types";
-import { TaskStatus } from "@/features/tasks/types";
+import { Task, TaskStatus } from "@/features/tasks/types";
 import { getWorkspaceMember } from "@/features/members/workspace/utils";
 import { Workspace } from "../types";
 
@@ -229,7 +232,27 @@ const app = new Hono()
     ]);
 
     for (const task of tasks.documents) {
+      const histories = await databases.listDocuments(
+        DATABASE_ID,
+        HISTORIES_ID,
+        [Query.equal("taskId", task.$id)]
+      );
+
+      for (const history of histories.documents) {
+        await databases.deleteDocument(DATABASE_ID, HISTORIES_ID, history.$id);
+      }
+
       await databases.deleteDocument(DATABASE_ID, TASKS_ID, task.$id);
+    }
+
+    const milestones = await databases.listDocuments(
+      DATABASE_ID,
+      MILESTONES_ID,
+      [Query.equal("workspaceId", workspaceId)]
+    );
+
+    for (const milestone of milestones.documents) {
+      await databases.deleteDocument(DATABASE_ID, MILESTONES_ID, milestone.$id);
     }
 
     const projects = await databases.listDocuments(DATABASE_ID, PROJECTS_ID, [
@@ -237,7 +260,35 @@ const app = new Hono()
     ]);
 
     for (const project of projects.documents) {
+      const projectMembers = await databases.listDocuments(
+        DATABASE_ID,
+        PROJECT_MEMBERS_ID,
+        [Query.equal("projectId", project.$id)]
+      );
+
+      for (const projectMember of projectMembers.documents) {
+        await databases.deleteDocument(
+          DATABASE_ID,
+          PROJECT_MEMBERS_ID,
+          projectMember.$id
+        );
+      }
+
       await databases.deleteDocument(DATABASE_ID, PROJECTS_ID, project.$id);
+    }
+
+    const workspaceMembers = await databases.listDocuments(
+      DATABASE_ID,
+      WORKSPACE_MEMBERS_ID,
+      [Query.equal("workspaceId", workspaceId)]
+    );
+
+    for (const workspaceMember of workspaceMembers.documents) {
+      await databases.deleteDocument(
+        DATABASE_ID,
+        WORKSPACE_MEMBERS_ID,
+        workspaceMember.$id
+      );
     }
 
     await databases.deleteDocument(DATABASE_ID, WORKSPACES_ID, workspaceId);
@@ -339,90 +390,127 @@ const app = new Hono()
     const thisMonthEnd = endOfMonth(now);
     const lastMonthStart = startOfMonth(subMonths(now, 1));
     const lastMonthEnd = endOfMonth(subMonths(now, 1));
+    const batchSize = 100;
 
-    const thisMonthTasks = await databases.listDocuments(
-      DATABASE_ID,
-      TASKS_ID,
-      [
+    let thisMonthOffset = 0;
+    let thisMonthTasks: Task[] = [];
+    let thisMonthTaskCount = 0;
+
+    while (true) {
+      const batch = await databases.listDocuments<Task>(DATABASE_ID, TASKS_ID, [
         Query.equal("workspaceId", workspaceId),
         Query.greaterThanEqual("startDate", thisMonthStart.toISOString()),
         Query.lessThanEqual("startDate", thisMonthEnd.toISOString()),
-      ]
-    );
+        Query.limit(batchSize),
+        Query.offset(thisMonthOffset),
+      ]);
 
-    const lastMonthTasks = await databases.listDocuments(
-      DATABASE_ID,
-      TASKS_ID,
-      [
+      thisMonthTasks = thisMonthTasks.concat(batch.documents);
+
+      if (thisMonthOffset === 0) {
+        thisMonthTaskCount = batch.total;
+      }
+
+      if (batch.documents.length < batchSize) {
+        break;
+      }
+
+      thisMonthOffset += batchSize;
+    }
+
+    let lastMonthOffset = 0;
+    let lastMonthTasks: Task[] = [];
+    let lastMonthTaskCount = 0;
+
+    while (true) {
+      const batch = await databases.listDocuments<Task>(DATABASE_ID, TASKS_ID, [
         Query.equal("workspaceId", workspaceId),
         Query.greaterThanEqual("startDate", lastMonthStart.toISOString()),
         Query.lessThanEqual("startDate", lastMonthEnd.toISOString()),
-      ]
-    );
+        Query.limit(batchSize),
+        Query.offset(lastMonthOffset),
+      ]);
 
-    const taskCount = thisMonthTasks.total;
-    const taskDifferece = taskCount - lastMonthTasks.total;
+      lastMonthTasks = lastMonthTasks.concat(batch.documents);
 
-    const thisMonthAssignedTasks = thisMonthTasks.documents.filter(
+      if (lastMonthOffset === 0) {
+        lastMonthTaskCount = batch.total;
+      }
+
+      if (batch.documents.length < batchSize) {
+        break;
+      }
+
+      lastMonthOffset += batchSize;
+    }
+
+    const monthlyTaskCount = thisMonthTaskCount;
+    const monthlyTaskDifference = thisMonthTaskCount - lastMonthTaskCount;
+
+    const thisMonthAssignedTasks = thisMonthTasks.filter(
       (task) => task.assigneeId === member.$id
     );
 
-    const lastMonthAssignedTasks = lastMonthTasks.documents.filter(
+    const lastMonthAssignedTasks = lastMonthTasks.filter(
       (task) => task.assigneeId === member.$id
     );
 
-    const assignedTaskCount = thisMonthAssignedTasks.length;
-    const assignedTaskDifferece =
-      assignedTaskCount - lastMonthAssignedTasks.length;
+    const monthlyAssignedTaskCount = thisMonthAssignedTasks.length;
+    const monthlyAssignedTaskDifference =
+      monthlyAssignedTaskCount - lastMonthAssignedTasks.length;
 
-    const thisMonthIncompleteTasks = thisMonthTasks.documents.filter(
+    const thisMonthIncompleteTasks = thisMonthTasks.filter(
       (task) => task.status !== TaskStatus.DONE
     );
 
-    const lastMonthIncompleteTasks = lastMonthTasks.documents.filter(
+    const lastMonthIncompleteTasks = lastMonthTasks.filter(
       (task) => task.status !== TaskStatus.DONE
     );
 
-    const incompleteTaskCount = thisMonthIncompleteTasks.length;
-    const incompleteTaskDifferece =
-      incompleteTaskCount - lastMonthIncompleteTasks.length;
+    const monthlyIncompleteTaskCount = thisMonthIncompleteTasks.length;
+    const monthlyIncompleteTaskDifference =
+      monthlyIncompleteTaskCount - lastMonthIncompleteTasks.length;
 
-    const thisMonthCompletedTasks = thisMonthTasks.documents.filter(
+    const thisMonthCompletedTasks = thisMonthTasks.filter(
       (task) => task.status === TaskStatus.DONE
     );
 
-    const lastMonthCompletedTasks = lastMonthTasks.documents.filter(
+    const lastMonthCompletedTasks = lastMonthTasks.filter(
       (task) => task.status === TaskStatus.DONE
     );
 
-    const completedTaskCount = thisMonthCompletedTasks.length;
-    const completedTaskDifferece =
-      completedTaskCount - lastMonthCompletedTasks.length;
+    const monthlyCompletedTaskCount = thisMonthCompletedTasks.length;
+    const monthlyCompletedTaskDifference =
+      monthlyCompletedTaskCount - lastMonthCompletedTasks.length;
 
-    const thisMonthOverdueTasks = thisMonthTasks.documents.filter(
+    const thisMonthOverdueTasks = thisMonthTasks.filter(
       (task) => new Date(task.dueDate) < now && task.status !== TaskStatus.DONE
     );
 
-    const lastMonthOverdueTasks = lastMonthTasks.documents.filter(
+    const lastMonthOverdueTasks = lastMonthTasks.filter(
       (task) => new Date(task.dueDate) < now && task.status !== TaskStatus.DONE
     );
 
-    const overdueTaskCount = thisMonthOverdueTasks.length;
-    const overdueTaskDifferece =
-      overdueTaskCount - lastMonthOverdueTasks.length;
+    const monthlyOverdueTaskCount = thisMonthOverdueTasks.length;
+    const monthlyOverdueTaskDifference =
+      monthlyOverdueTaskCount - lastMonthOverdueTasks.length;
 
     return c.json({
       data: {
-        taskCount,
-        taskDifferece,
-        assignedTaskCount,
-        assignedTaskDifferece,
-        incompleteTaskCount,
-        incompleteTaskDifferece,
-        completedTaskCount,
-        completedTaskDifferece,
-        overdueTaskCount,
-        overdueTaskDifferece,
+        monthlyTaskCount,
+        monthlyTaskDifference,
+
+        monthlyAssignedTaskCount,
+        monthlyAssignedTaskDifference,
+
+        monthlyIncompleteTaskCount,
+        monthlyIncompleteTaskDifference,
+
+        monthlyCompletedTaskCount,
+        monthlyCompletedTaskDifference,
+
+        monthlyOverdueTaskCount,
+        monthlyOverdueTaskDifference,
       },
     });
   });

@@ -46,7 +46,7 @@ const localizer = dateFnsLocalizer({
 interface DataCalendarProps {
   data: Task[];
   milestones?: Milestone[];
-  isAdmin?: boolean;
+  canManageMilestones?: boolean;
 }
 
 interface CustomToolbarProps {
@@ -94,7 +94,7 @@ const CustomToolbar = ({ date, onNavigate }: CustomToolbarProps) => {
 export const DataCalendar = ({
   data,
   milestones = [],
-  isAdmin = false,
+  canManageMilestones = false,
 }: DataCalendarProps) => {
   const [value, setValue] = useState(
     data.length > 0 ? new Date(data[0].dueDate) : new Date()
@@ -142,7 +142,6 @@ export const DataCalendar = ({
 
   const allEvents = [...milestoneEvents, ...taskEvents];
 
-  console.log("allEvents", allEvents);
   const handleNavigate = (action: "PREV" | "NEXT" | "TODAY") => {
     if (action === "PREV") {
       setValue(subMonths(value, 1));
@@ -180,8 +179,12 @@ export const DataCalendar = ({
                     title={event.title}
                     project={event.project}
                     projectId={event.projectId}
-                    onEdit={isAdmin ? handleEditMilestone : undefined}
-                    onRemove={isAdmin ? handleDeleteMilestone : undefined}
+                    onEdit={
+                      canManageMilestones ? handleEditMilestone : undefined
+                    }
+                    onRemove={
+                      canManageMilestones ? handleDeleteMilestone : undefined
+                    }
                   />
                 </div>
               );

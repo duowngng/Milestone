@@ -5,10 +5,10 @@ import { getCurrent } from "@/features/auth/queries";
 import { ProjectIdClient } from "./client";
 
 const ProjectIdPage = async () => {
-  const user = getCurrent();
+  const user = await getCurrent();
   if (!user) {
     redirect("/sign-in");
-  };
+  }
 
   return <ProjectIdClient />;
 };

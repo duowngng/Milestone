@@ -6,6 +6,9 @@ export const useCreateMemberModal = () => {
     parseAsBoolean.withDefault(false).withOptions({ clearOnDefault: true })
   );
 
+  const [initialWorkspaceId, setInitialWorkspaceId] =
+    useQueryState("initialWorkspaceId");
+
   const open = () => setIsOpen(true);
   const close = () => setIsOpen(false);
 
@@ -14,5 +17,7 @@ export const useCreateMemberModal = () => {
     open,
     close,
     setIsOpen,
+    initialWorkspaceId,
+    setInitialWorkspaceId,
   };
 };

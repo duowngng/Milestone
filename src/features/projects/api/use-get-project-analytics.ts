@@ -5,17 +5,24 @@ import { InferResponseType } from "hono";
 
 interface useGetProjectAnalyticsProps {
   projectId: string;
-};
+  enabled?: boolean;
+}
 
-export type ProjectAnayticsResponseType = InferResponseType<typeof client.api.projects[":projectId"]["analytics"]["$get"], 200>;
+export type ProjectAnayticsResponseType = InferResponseType<
+  (typeof client.api.projects)[":projectId"]["analytics"]["$get"],
+  200
+>;
 
 export const useGetProjectAnalytics = ({
   projectId,
+  enabled = true,
 }: useGetProjectAnalyticsProps) => {
   const query = useQuery({
     queryKey: ["project-analytics", projectId],
     queryFn: async () => {
-      const response = await client.api.projects[":projectId"]["analytics"].$get({
+      const response = await client.api.projects[":projectId"][
+        "analytics"
+      ].$get({
         param: { projectId },
       });
 
@@ -27,7 +34,8 @@ export const useGetProjectAnalytics = ({
 
       return data;
     },
-});
+    enabled: enabled && !!projectId,
+  });
 
   return query;
-}
+};

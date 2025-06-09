@@ -1,10 +1,11 @@
 "use client";
 
 import { toast } from "sonner";
-import { CopyIcon, EditIcon, TrashIcon } from "lucide-react";
+import { CopyIcon, EditIcon, TrashIcon, UserPlusIcon } from "lucide-react";
 
 import { useConfirm } from "@/hooks/use-confirm";
 import { useEditProjectModal } from "@/features/projects/hooks/use-edit-project-modal";
+import { useAddMembersModal } from "@/features/members/project/hooks/use-add-members-modal";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -22,6 +23,7 @@ interface ProjectActionsProps {
 export const ProjectActions = ({ id, children }: ProjectActionsProps) => {
   const { mutate, isPending } = useDeleteProject();
   const { open } = useEditProjectModal();
+  const { open: openAddMembers, setInitialProjectId } = useAddMembersModal();
 
   const [ConfirmDialog, confirm] = useConfirm(
     "Delete Project",
@@ -60,6 +62,16 @@ export const ProjectActions = ({ id, children }: ProjectActionsProps) => {
           >
             <EditIcon className="size-4 mr-2 stroke-2" />
             Edit Project
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => {
+              setInitialProjectId(id);
+              openAddMembers();
+            }}
+            className="font-medium p-[10px]"
+          >
+            <UserPlusIcon className="size-4 mr-2 stroke-2" />
+            Add Member
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={onDelete}

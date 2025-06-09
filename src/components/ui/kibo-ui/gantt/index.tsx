@@ -1096,26 +1096,28 @@ export const GanttMarker: FC<
             </span>
           </div>
         </ContextMenuTrigger>
-        <ContextMenuContent>
-          {onEdit ? (
-            <ContextMenuItem
-              className="flex items-center gap-2"
-              onClick={handleEdit}
-            >
-              <PencilIcon size={16} />
-              Edit milestone
-            </ContextMenuItem>
-          ) : null}
-          {onRemove ? (
-            <ContextMenuItem
-              className="flex items-center gap-2 text-destructive"
-              onClick={handleRemove}
-            >
-              <TrashIcon size={16} />
-              Remove milestone
-            </ContextMenuItem>
-          ) : null}
-        </ContextMenuContent>
+        {(onEdit || onRemove) && (
+          <ContextMenuContent>
+            {onEdit ? (
+              <ContextMenuItem
+                className="flex items-center gap-2"
+                onClick={handleEdit}
+              >
+                <PencilIcon size={16} />
+                Edit milestone
+              </ContextMenuItem>
+            ) : null}
+            {onRemove ? (
+              <ContextMenuItem
+                className="flex items-center gap-2 text-destructive"
+                onClick={handleRemove}
+              >
+                <TrashIcon size={16} />
+                Remove milestone
+              </ContextMenuItem>
+            ) : null}
+          </ContextMenuContent>
+        )}
       </ContextMenu>
       <div className={cn("h-full w-px bg-card", className)} />
     </div>

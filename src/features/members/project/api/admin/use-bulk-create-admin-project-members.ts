@@ -4,25 +4,22 @@ import { InferRequestType, InferResponseType } from "hono";
 
 import { client } from "@/lib/rpc";
 
-import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
-
 type ResponseType = InferResponseType<
-  (typeof client.api.members.project)["bulk-create"]["$post"],
+  (typeof client.api.admin.members.project)["bulk-create"]["$post"],
   200
 >;
 type RequestType = InferRequestType<
-  (typeof client.api.members.project)["bulk-create"]["$post"]
+  (typeof client.api.admin.members.project)["bulk-create"]["$post"]
 >;
 
-export const useBulkCreateProjectMembers = () => {
+export const useBulkCreateAdminProjectMembers = () => {
   const queryClient = useQueryClient();
-  const workspaceId = useWorkspaceId();
 
   const mutation = useMutation<ResponseType, Error, RequestType>({
     mutationFn: async ({ json }) => {
-      const response = await client.api.members.project["bulk-create"]["$post"](
-        { json }
-      );
+      const response = await client.api.admin.members.project["bulk-create"][
+        "$post"
+      ]({ json });
 
       if (!response.ok) {
         throw new Error("Failed to add members to the project");
@@ -30,15 +27,11 @@ export const useBulkCreateProjectMembers = () => {
 
       return await response.json();
     },
-    onSuccess: (_, { json }) => {
-      const { projectId } = json;
+    onSuccess: () => {
       toast.success("Members added to the project");
-      queryClient.invalidateQueries({
-        queryKey: ["projectMembers", workspaceId, projectId],
-      });
+      queryClient.invalidateQueries({ queryKey: ["admin-project-members"] });
     },
-    onError: (error) => {
-      console.error("Error adding members:", error);
+    onError: () => {
       toast.error("Failed to add members to the project");
     },
   });

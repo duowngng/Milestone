@@ -11,6 +11,7 @@ import { useGetMembers } from "@/features/members/workspace/api/use-get-members"
 import { useGetCurrentMember } from "@/features/members/workspace/api/use-get-current-member";
 import { isWorkspaceManager } from "@/features/members/workspace/utils";
 import { useGetProjects } from "@/features/projects/api/use-get-projects";
+import { useGetManagedProjects } from "@/features/projects/hooks/use-get-managed-projects";
 import { useGetTasks } from "@/features/tasks/api/use-get-tasks";
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 import { useGetWorkspaceAnalytics } from "@/features/workspaces/api/use-get-workspace-analytics";
@@ -34,6 +35,10 @@ export const WorkspaceIdClient = () => {
   const { data: projects, isLoading: isLoadingProjects } = useGetProjects({
     workspaceId,
   });
+  const { data: managedProjects, isLoading: isLoadingManagedProjects } =
+    useGetManagedProjects({
+      workspaceId,
+    });
   const { data: members, isLoading: isLoadingMembers } = useGetMembers({
     workspaceId,
   });
@@ -54,13 +59,21 @@ export const WorkspaceIdClient = () => {
     isLoadingTasks ||
     isLoadingProjects ||
     isLoadingMembers ||
-    isLoadingMember;
+    isLoadingMember ||
+    isLoadingManagedProjects;
 
   if (isLoading) {
     return <PageLoader />;
   }
 
-  if (!analytics || !tasks || !projects || !members || !currentMember) {
+  if (
+    !analytics ||
+    !tasks ||
+    !projects ||
+    !members ||
+    !currentMember ||
+    !managedProjects
+  ) {
     return <PageError message="Failed to load workspace data" />;
   }
 
@@ -71,12 +84,12 @@ export const WorkspaceIdClient = () => {
         <TaskList
           data={tasks.documents}
           total={tasks.total}
-          canCreateTask={projects.total > 0}
+          canCreateTask={managedProjects.length > 0}
         />
         <ProjectList
           data={projects.documents}
           total={projects.total}
-          isManager={isManager}
+          canCreateProject={isManager}
         />
         <MemberList data={members.documents} total={members.total} />
       </div>
@@ -145,10 +158,14 @@ export const TaskList = ({ data, total, canCreateTask }: TaskListProps) => {
 interface ProjectListProps {
   data: Project[];
   total: number;
-  isManager: boolean;
+  canCreateProject: boolean;
 }
 
-export const ProjectList = ({ data, total, isManager }: ProjectListProps) => {
+export const ProjectList = ({
+  data,
+  total,
+  canCreateProject,
+}: ProjectListProps) => {
   const workspaceId = useWorkspaceId();
   const { open: createProject } = useCreateProjectModal();
 
@@ -157,7 +174,7 @@ export const ProjectList = ({ data, total, isManager }: ProjectListProps) => {
       <div className="bg-white border rounded-lg p-4">
         <div className="flex items-center justify-between">
           <p className="text-lg font-semibold">Projects ({total})</p>
-          {isManager && (
+          {canCreateProject && (
             <Button
               onClick={() => createProject()}
               variant="secondary"

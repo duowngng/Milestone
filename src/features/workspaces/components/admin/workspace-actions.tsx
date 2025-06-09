@@ -1,10 +1,11 @@
 "use client";
 
 import { toast } from "sonner";
-import { CopyIcon, EditIcon, TrashIcon } from "lucide-react";
+import { CopyIcon, EditIcon, TrashIcon, UserPlusIcon } from "lucide-react";
 
 import { useConfirm } from "@/hooks/use-confirm";
 import { useEditWorkspaceModal } from "@/features/workspaces/hooks/use-edit-workspace-modal";
+import { useCreateMemberModal } from "@/features/members/workspace/hooks/use-create-member-modal";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -22,6 +23,7 @@ interface WorkspaceActionsProps {
 export const WorkspaceActions = ({ id, children }: WorkspaceActionsProps) => {
   const { mutate, isPending } = useDeleteWorkspace();
   const { open } = useEditWorkspaceModal();
+  const { open: openAddMember, setInitialWorkspaceId } = useCreateMemberModal();
 
   const [ConfirmDialog, confirm] = useConfirm(
     "Delete Workspace",
@@ -60,6 +62,16 @@ export const WorkspaceActions = ({ id, children }: WorkspaceActionsProps) => {
           >
             <EditIcon className="size-4 mr-2 stroke-2" />
             Edit Workspace
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => {
+              setInitialWorkspaceId(id);
+              openAddMember();
+            }}
+            className="font-medium p-[10px]"
+          >
+            <UserPlusIcon className="size-4 mr-2 stroke-2" />
+            Add Member
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={onDelete}

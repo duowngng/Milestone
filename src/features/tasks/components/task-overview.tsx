@@ -13,6 +13,7 @@ import { TaskDate } from "./task-date";
 
 import { Task } from "../types";
 import { useEditTaskModal } from "../hooks/use-edit-task-modal";
+import { useCanManageTask } from "../hooks/use-can-manage-task";
 
 interface TaskOverviewProps {
   task: Task;
@@ -20,16 +21,23 @@ interface TaskOverviewProps {
 
 export const TaskOverview = ({ task }: TaskOverviewProps) => {
   const { open } = useEditTaskModal();
+  const { canEditLimitedFields, isLoading } = useCanManageTask({ task });
 
   return (
     <div className="flex flex-col gap-y-4 col-span-1">
       <div className="bg-muted rounded-lg p-4">
         <div className="flex items-center justify-between">
           <p className="text-lg font-semibold">Overview</p>
-          <Button onClick={() => open(task.$id)} size="sm" variant="secondary">
-            <PencilIcon className="size-4 mr-2" />
-            Edit
-          </Button>
+          {canEditLimitedFields && !isLoading && (
+            <Button
+              onClick={() => open(task.$id)}
+              size="sm"
+              variant="secondary"
+            >
+              <PencilIcon className="size-4 mr-2" />
+              Edit
+            </Button>
+          )}
         </div>
         <DottedSeparator className="my-4" />
         <div className="flex flex-col gap-y-4">
