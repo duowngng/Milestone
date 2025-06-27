@@ -50,6 +50,7 @@ export const TaskOverview = ({ task }: TaskOverviewProps) => {
               <TaskDate
                 value={task.startDate}
                 status={task.status}
+                dateType="startDate"
                 className="text-sm font-medium"
               />
             </OverviewProperty>
@@ -57,6 +58,7 @@ export const TaskOverview = ({ task }: TaskOverviewProps) => {
               <TaskDate
                 value={task.dueDate}
                 status={task.status}
+                dateType="dueDate"
                 className="text-sm font-medium"
               />
             </OverviewProperty>

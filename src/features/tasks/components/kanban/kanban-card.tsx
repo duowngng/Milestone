@@ -35,6 +35,7 @@ export const KanbanCard = ({ task, hideProject }: KanbanCardProps) => {
         <TaskDate
           value={task.dueDate}
           status={task.status}
+          dateType="dueDate"
           className="flex items-center text-xs"
         />
       </div>

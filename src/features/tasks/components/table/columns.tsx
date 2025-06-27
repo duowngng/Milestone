@@ -108,7 +108,9 @@ export const columns = (hideProject: boolean = false): ColumnDef<Task>[] => {
         const startDate = row.original.startDate;
         const status = row.original.status;
 
-        return <TaskDate value={startDate} status={status} />;
+        return (
+          <TaskDate value={startDate} status={status} dateType="startDate" />
+        );
       },
     },
     {
@@ -128,7 +130,7 @@ export const columns = (hideProject: boolean = false): ColumnDef<Task>[] => {
         const dueDate = row.original.dueDate;
         const status = row.original.status;
 
-        return <TaskDate value={dueDate} status={status} />;
+        return <TaskDate value={dueDate} status={status} dateType="dueDate" />;
       },
     },
     {

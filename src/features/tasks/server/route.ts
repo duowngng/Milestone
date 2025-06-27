@@ -23,6 +23,64 @@ import { sessionMiddleware } from "@/lib/session-middleware";
 import { createTaskSchema } from "../schemas";
 import { Task, TaskStatus, TaskPriority } from "../types";
 
+const getTaskChanges = (
+  existingTask: Task,
+  updates: Partial<z.infer<typeof createTaskSchema>>
+) => {
+  const changedFields: string[] = [];
+  const oldValues: Partial<Task> = {};
+  const newValues: Record<string, string | Date | number> = {};
+
+  (Object.keys(updates) as Array<keyof typeof updates>).forEach((key) => {
+    const newValue = updates[key];
+    const oldValue = existingTask[key as keyof Task];
+
+    if (newValue === undefined) return;
+
+    let isDifferent = false;
+    if (key === "startDate" || key === "dueDate") {
+      if (!isEqual(new Date(newValue as Date), new Date(oldValue as string))) {
+        isDifferent = true;
+      }
+    } else if (String(newValue) !== String(oldValue)) {
+      isDifferent = true;
+    }
+
+    if (isDifferent) {
+      changedFields.push(key);
+      oldValues[key as keyof Task] = oldValue;
+      newValues[key] = newValue;
+    }
+  });
+
+  return { changedFields, oldValues, newValues };
+};
+
+const checkUpdatePermissions = (
+  isManager: boolean,
+  changedFields: string[]
+): boolean => {
+  if (isManager) {
+    return true;
+  }
+
+  const restrictedFields: string[] = [
+    "name",
+    "projectId",
+    "startDate",
+    "dueDate",
+    "assigneeId",
+    "description",
+    "priority",
+  ];
+
+  const hasRestrictedChanges = changedFields.some((field) =>
+    restrictedFields.includes(field)
+  );
+
+  return !hasRestrictedChanges;
+};
+
 const app = new Hono()
   .get(
     "/",
@@ -330,18 +388,8 @@ const app = new Hono()
     async (c) => {
       const user = c.get("user");
       const databases = c.get("databases");
-      const {
-        name,
-        status,
-        projectId,
-        startDate,
-        dueDate,
-        assigneeId,
-        description,
-        priority,
-        progress,
-      } = c.req.valid("json");
       const { taskId } = c.req.param();
+      const jsonUpdates = c.req.valid("json");
 
       const existingTask = await databases.getDocument<Task>(
         DATABASE_ID,
@@ -376,97 +424,16 @@ const app = new Hono()
         return c.json({ error: "Unauthorized" }, 403);
       }
 
-      if (!isManager) {
-        const restrictedFieldsUpdated = [
-          name !== undefined,
-          projectId !== undefined,
-          startDate !== undefined,
-          dueDate !== undefined,
-          assigneeId !== undefined,
-          description !== undefined,
-          priority !== undefined,
-        ].some(Boolean);
+      const { changedFields, oldValues, newValues } = getTaskChanges(
+        existingTask,
+        jsonUpdates
+      );
 
-        if (restrictedFieldsUpdated) {
-          return c.json(
-            {
-              error: "Unauthorized",
-            },
-            403
-          );
-        }
-      }
-
-      const changedFields: string[] = [];
-      const oldValues: Partial<Task> = {};
-      const newValues: Partial<Task> = {};
-
-      if (name !== undefined && name !== existingTask.name) {
-        changedFields.push("name");
-        oldValues["name"] = existingTask.name;
-        newValues["name"] = name;
-      }
-
-      if (status !== undefined && status !== existingTask.status) {
-        changedFields.push("status");
-        oldValues["status"] = existingTask.status;
-        newValues["status"] = status;
-      }
-
-      if (projectId !== undefined && projectId !== existingTask.projectId) {
-        changedFields.push("projectId");
-        oldValues["projectId"] = existingTask.projectId;
-        newValues["projectId"] = projectId;
-      }
-
-      if (startDate !== undefined) {
-        const newDateValue = new Date(startDate);
-        const existingDateValue = new Date(existingTask.startDate);
-
-        if (!isEqual(newDateValue, existingDateValue)) {
-          changedFields.push("startDate");
-          oldValues["startDate"] = existingTask.startDate;
-          newValues["startDate"] = startDate.toISOString();
-        }
-      }
-
-      if (dueDate !== undefined) {
-        const newDateValue = new Date(dueDate);
-        const existingDateValue = new Date(existingTask.dueDate);
-
-        if (!isEqual(newDateValue, existingDateValue)) {
-          changedFields.push("dueDate");
-          oldValues["dueDate"] = existingTask.dueDate;
-          newValues["dueDate"] = dueDate.toISOString();
-        }
-      }
-
-      if (assigneeId !== undefined && assigneeId !== existingTask.assigneeId) {
-        changedFields.push("assigneeId");
-        oldValues["assigneeId"] = existingTask.assigneeId;
-        newValues["assigneeId"] = assigneeId;
-      }
-
-      if (
-        description !== undefined &&
-        description !== existingTask.description
-      ) {
-        changedFields.push("description");
-      }
-
-      if (priority !== undefined && priority !== existingTask.priority) {
-        changedFields.push("priority");
-        oldValues["priority"] = existingTask.priority;
-        newValues["priority"] = priority;
-      }
-
-      if (
-        progress !== undefined &&
-        String(progress) !== String(existingTask.progress)
-      ) {
-        changedFields.push("progress");
-        oldValues["progress"] = existingTask.progress;
-        newValues["progress"] = parseInt(progress);
+      if (!checkUpdatePermissions(isManager, changedFields)) {
+        return c.json(
+          { error: "Unauthorized to update one or more fields" },
+          403
+        );
       }
 
       const task = await databases.updateDocument(
@@ -474,19 +441,18 @@ const app = new Hono()
         TASKS_ID,
         taskId,
         {
-          name,
-          status,
-          projectId,
-          startDate,
-          dueDate,
-          assigneeId,
-          progress: progress ? parseInt(progress) : undefined,
-          priority,
-          description,
+          ...jsonUpdates,
+          progress: jsonUpdates.progress
+            ? parseInt(jsonUpdates.progress)
+            : undefined,
         }
       );
 
       if (changedFields.length > 0) {
+        if (newValues.progress) {
+          newValues.progress = parseInt(newValues.progress as string);
+        }
+
         await databases.createDocument(DATABASE_ID, HISTORIES_ID, ID.unique(), {
           taskId,
           editorId: workspaceMember.$id,
