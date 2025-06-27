@@ -131,41 +131,41 @@ export const MembersProject = ({
                         {member.email}
                       </p>
                     </div>
-                    {!isCurrentUser && (
-                      <DropdownMenu
-                        open={openMenuId === member.$id}
-                        onOpenChange={(open) => {
-                          setOpenMenuId(open ? member.$id : null);
-                        }}
-                      >
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            className="ml-auto"
-                            size="icon"
-                            variant="secondary"
-                          >
-                            <MoreVerticalIcon className="size-4 text-muted-foreground" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                          <DropdownMenuItem
-                            className="font-medium"
-                            onClick={() =>
-                              handleUpdateMember(member.$id, MemberRole.MANAGER)
-                            }
-                            disabled={isUpdatingMember}
-                          >
-                            Set as Project Manager
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="font-medium"
-                            onClick={() =>
-                              handleUpdateMember(member.$id, MemberRole.MEMBER)
-                            }
-                            disabled={isUpdatingMember}
-                          >
-                            Set as Member
-                          </DropdownMenuItem>
+                    <DropdownMenu
+                      open={openMenuId === member.$id}
+                      onOpenChange={(open) => {
+                        setOpenMenuId(open ? member.$id : null);
+                      }}
+                    >
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          className="ml-auto"
+                          size="icon"
+                          variant="secondary"
+                        >
+                          <MoreVerticalIcon className="size-4 text-muted-foreground" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem
+                          className="font-medium"
+                          onClick={() =>
+                            handleUpdateMember(member.$id, MemberRole.MANAGER)
+                          }
+                          disabled={isUpdatingMember}
+                        >
+                          Set as Project Manager
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="font-medium"
+                          onClick={() =>
+                            handleUpdateMember(member.$id, MemberRole.MEMBER)
+                          }
+                          disabled={isUpdatingMember}
+                        >
+                          Set as Member
+                        </DropdownMenuItem>
+                        {!isCurrentUser && (
                           <DropdownMenuItem
                             className="font-medium text-red-700"
                             onClick={() => handleDeleteMember(member.$id)}
@@ -173,9 +173,9 @@ export const MembersProject = ({
                           >
                             Remove {member.name}
                           </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                   {index < members.documents.length - 1 && (
                     <Separator className="my-2.5" />

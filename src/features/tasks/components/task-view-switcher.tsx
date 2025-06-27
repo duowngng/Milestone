@@ -140,7 +140,7 @@ export const TaskViewSwitcher = ({
       <div className="p-4 pb-0 shrink-0">
         {" "}
         <div className="flex flex-col gap-y-2 lg:flex-row justify-between items-center">
-          <TabsList className="w-full lg:w-auto *:text-xs *:lg:text-sm">
+          <TabsList className="flex flex-col gap-y-2 lg:flex-row w-full h-auto lg:w-auto *:text-xs *:lg:text-sm">
             {paramProjectId && (
               <TabsTrigger className="h-8 w-full lg:w-auto" value="overview">
                 Overview
